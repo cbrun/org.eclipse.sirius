@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ltk.core.refactoring.renameParticipants">
+	      <renameParticipant
+	            class="org.eclipse.sirius.runtime.ide.workspace.refactoring.RenameModelResourceParticipant"
+	            id="org.eclipse.sirius.runtime.ide.workspace.renameModelResourceParticipant"
+	            name="Model Resource Rename">
+	         <enablement>
+	         <!--
+	      <with variable="affectedNatures">
+	        <iterate operator="or">
+	          <equals value="org.eclipse.sirius.nature.modelingproject"/>
+	        </iterate>
+	      </with>
+	      -->
+	      <with variable="element">
+	        <instanceof value="org.eclipse.core.resources.IFile"/>
+	      </with>
+	    </enablement>
+      </renameParticipant>
+   </extension>
+   <extension
+         point="org.eclipse.ltk.core.refactoring.moveParticipants">
+      <moveParticipant
+            class="org.eclipse.sirius.runtime.ide.workspace.refactoring.MoveModelResourceParticipant"
+            id="org.eclipse.sirius.runtime.ide.workspace.moveModelParticipant"
+            name="Model Resource Move">
+         <enablement></enablement>
+      </moveParticipant>
+   </extension>
+
+</plugin>
