@@ -1,0 +1,5 @@
+This is a draft implementation.
+
+Notable missing pieces :
+- how to detect efficiently a file is an XMI versus "something else"
+- preventing renaming if we might endup, in memory, with two resources having the same URI in a single resourceSet.

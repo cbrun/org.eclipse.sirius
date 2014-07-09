@@ -15,13 +15,12 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 import org.eclipse.ltk.core.refactoring.participants.ResourceChangeChecker;
-import org.eclipse.sirius.business.api.session.SessionManager;
 
 import com.google.common.collect.Lists;
 
 public class RenameModelResourceParticipant extends RenameParticipant {
 
-	private List<Change> changes = Lists.newArrayList();
+	private List<URIChange> changes = Lists.newArrayList();
 
 	public RenameModelResourceParticipant() {
 	}
@@ -29,7 +28,7 @@ public class RenameModelResourceParticipant extends RenameParticipant {
 	@Override
 	protected boolean initialize(Object element) {
 		if (element instanceof IResource) {
-			return SessionManager.INSTANCE.getSessions().size() > 0;
+			return true;
 		}
 		return false;
 	}
@@ -43,51 +42,40 @@ public class RenameModelResourceParticipant extends RenameParticipant {
 	public RefactoringStatus checkConditions(IProgressMonitor pm,
 			CheckConditionsContext context) throws OperationCanceledException {
 		changes = Lists.newArrayList();
+
 		ResourceChangeChecker checker = (ResourceChangeChecker) context
 				.getChecker(ResourceChangeChecker.class);
 		IResourceChangeDescriptionFactory deltaFactory = checker
 				.getDeltaFactory();
 		IResourceDelta[] affectedChildren = deltaFactory.getDelta()
 				.getAffectedChildren();
+		collectAffectedModels(affectedChildren, deltaFactory);
 
-		return verifyAffectedChildren(affectedChildren, deltaFactory);
+		return new RefactoringStatus();
 	}
 
-	private RefactoringStatus verifyAffectedChildren(
-			IResourceDelta[] affectedChildren,
+	private void collectAffectedModels(IResourceDelta[] affectedChildren,
 			IResourceChangeDescriptionFactory deltaFactory) {
 
 		for (IResourceDelta resourceDelta : affectedChildren) {
-			if ((resourceDelta.getMovedToPath() != null || resourceDelta
-					.getMovedFromPath() != null)
-					&& resourceDelta.getResource() instanceof IFile
+			if (resourceDelta.getResource() instanceof IFile
 					&& resourceDelta.getResource().getFullPath() != null) {
 
 				InMemoryResourceURIChange.appendInMemoryURIChanges(changes,
 						resourceDelta);
-				return new RefactoringStatus();
 
 			} else if (resourceDelta.getMovedToPath() == null) {
-				return verifyAffectedChildren(
-						resourceDelta.getAffectedChildren(), deltaFactory);
+				collectAffectedModels(resourceDelta.getAffectedChildren(),
+						deltaFactory);
 			}
 		}
 
-		return new RefactoringStatus();
 	}
 
 	@Override
 	public Change createChange(IProgressMonitor pm) throws CoreException,
 			OperationCanceledException {
-		if (changes.size() == 1) {
-			return changes.get(0);
-		}
-		if (changes.size() > 1) {
-			CompositeChange compo = new CompositeChange("update sessions",
-					changes.toArray(new Change[changes.size()]));
-			return compo;
-		}
-		return null;
+		return InMemoryResourceURIChange.toRefactoringChange(changes, pm);
 	}
 
 }
