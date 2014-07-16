@@ -531,4 +531,10 @@
       <initializer class="org.eclipse.sirius.diagram.internal.preferences.DiagramPreferenceInitializer"/>
    </extension>
    
+   
+  <extension
+        point="org.eclipse.sirius.dialect">
+     <dialect
+           class="org.eclipse.sirius.diagram.business.internal.dialect.DiagramDialect"></dialect>
+  </extension>
 </plugin>

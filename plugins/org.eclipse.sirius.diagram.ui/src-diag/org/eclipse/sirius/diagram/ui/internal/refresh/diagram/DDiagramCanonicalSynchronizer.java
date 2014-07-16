@@ -90,7 +90,7 @@ public class DDiagramCanonicalSynchronizer extends AbstractCanonicalSynchronizer
      * 
      * {@inheritDoc}
      * 
-     * @see org.eclipse.sirius.diagram.business.api.view.refresh.CanonicalSynchronizer#synchronize()
+     * @see org.eclipse.sirius.diagram.business.api.refresh.view.refresh.CanonicalSynchronizer#synchronize()
      */
     public void synchronize() {
         refreshSemantic();
