@@ -1,0 +1,47 @@
+target "sirius_kepler_minimal"
+
+include "sirius_kepler_minimal_headless.tpd"
+include "modules/swtbot-2.1.tpd"
+
+with source, requirements
+
+location Eclipse-Kepler "http://download.eclipse.org/releases/kepler" {
+// *************  UI
+	org.eclipse.jface
+	org.eclipse.jface.text
+	org.eclipse.jface.databinding
+	org.eclipse.ui
+	org.eclipse.help
+	org.eclipse.ui.ide
+	org.eclipse.ui.workbench
+	org.eclipse.ui.editors
+	org.eclipse.ui.navigator
+	org.eclipse.ui.navigator.resources
+	org.eclipse.ui.cheatsheets
+	// if we don't use the rcp feature then even by refering to org.eclipse.swt directly it will not be found.
+	org.eclipse.rcp.feature.group
+	//	org.eclipse.swt
+	//	org.eclipse.swt.cocoa.macosx.x86_64
+	//	org.eclipse.swt.gtk.linux.x86_64
+	//	org.eclipse.swt.gtk.linux.x86
+	//	org.eclipse.swt.win32.win32.x86_64
+	org.eclipse.draw2d
+	org.eclipse.emf.eef.runtime
+	org.eclipse.acceleo.ide.ui
+	org.eclipse.xtext.ui
+	org.eclipse.gmf.runtime.draw2d.ui
+	org.eclipse.gmf.runtime.common.ui
+	org.eclipse.gmf.runtime.diagram.ui
+	org.eclipse.gmf.runtime.diagram.ui.actions
+	org.eclipse.gmf.runtime.diagram.ui.printing
+	org.eclipse.gmf.runtime.diagram.ui.printing.render
+	org.eclipse.gmf.runtime.diagram.ui.properties
+	org.eclipse.gmf.runtime.diagram.ui.providers.ide
+	org.eclipse.gmf.runtime.diagram.ui.render
+	org.eclipse.gmf.runtime.diagram.ui.resources.editor
+	org.eclipse.gmf.runtime.diagram.ui.resources.editor.ide
+	// this is only used by the Ecore Samples.
+	org.eclipse.emf.codegen.ecore.ui
+	org.eclipse.emf.importer
+	org.eclipse.emf.importer.ecore
+}

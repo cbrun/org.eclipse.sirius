@@ -26,3 +26,10 @@ where @<name>@ can be any of the supported platform versions:
 * @luna@ (Eclipse 4.4M2)
 
 The corresponding target platform definitions can be found in @releng/org.eclipse.sirius.targets@ in the @sirius_<name>.targetplatform@ and @sirius_<name>.target@ files.
+
+If you can trigger a build containing only the components of Sirius which are working with no UI by using the @headless@ profile :
+
+bq. 
+  % mvn clean package -Pheadless -Dplatform-version-name=<name>
+
+But then the resulting update-site will be found in @packaging/org.eclipse.sirius.headless.update/target/repository@.
