@@ -1760,4 +1760,10 @@
                org.eclipse.emf.edit.provider.IItemLabelProvider
                org.eclipse.emf.edit.provider.IItemPropertySource"/>
    </extension>
+   <extension
+         point="org.eclipse.sirius.diagram.canonicalSynchronizerFactoryOverride">
+      <factory
+            class="org.eclipse.sirius.diagram.ui.internal.refresh.factory.CanonicalSynchronizerFactoryImpl">
+      </factory>
+   </extension>
 </plugin>
