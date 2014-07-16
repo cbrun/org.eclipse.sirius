@@ -15,7 +15,6 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
@@ -44,7 +43,6 @@ import org.eclipse.sirius.diagram.NodeStyle;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsRegistry;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayMode;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayServiceManager;
-import org.eclipse.sirius.diagram.business.api.query.DiagramDescriptionQuery;
 import org.eclipse.sirius.diagram.business.api.refresh.CanonicalSynchronizer;
 import org.eclipse.sirius.diagram.business.api.refresh.CanonicalSynchronizerFactory;
 import org.eclipse.sirius.diagram.business.api.refresh.DiagramCreationUtil;
@@ -176,17 +174,9 @@ public class DiagramDialectServices extends AbstractRepresentationDialectService
                 CanonicalSynchronizer canonicalSynchronizer = CanonicalSynchronizerFactory.INSTANCE.createCanonicalSynchronizer(gmfDiag);
                 canonicalSynchronizer.storeViewsToArrange(true);
                 canonicalSynchronizer.synchronize();
+                canonicalSynchronizer.postCreation();
                 monitor.worked(10);
-                if (gmfDiag != null && description instanceof DiagramDescription) {
-                    if (new DiagramDescriptionQuery((DiagramDescription) description).isHeaderSectionEnabled()) {
-                        TransactionalEditingDomain domain = TransactionUtil.getEditingDomain(diagram);
-                        if (domain != null) {
-                            Command setBestHeightHeaderCommand = new SetBestHeightHeaderCommand(domain, gmfDiag);
-                            setBestHeightHeaderCommand.execute();
-                            monitor.worked(1);
-                        }
-                    }
-                }
+                
             }
         } finally {
             monitor.done();

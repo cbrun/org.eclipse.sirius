@@ -44,4 +44,12 @@ public interface CanonicalSynchronizer {
      *            true to store in SiriusLayoutDataManager, false else
      */
     void storeViewsToArrange(boolean storeViewsToArrange);
+
+    /**
+     * Called only once, after the diagram got created and a first synchronize
+     * call has been done. This hook gives the chance to a canonical
+     * synchronizer to adapt model information based on the current model
+     * content when the diagram got created. once created.
+     */
+    void postCreation();
 }

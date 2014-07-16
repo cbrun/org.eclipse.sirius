@@ -34,10 +34,31 @@ public class ViewpointSelector {
 
     private Session session;
 
+    /**
+     * Create a new ViewpointSelector for a session.
+     * 
+     * @param session
+     *            the session to update when activating or deactivating
+     *            viewpoints.
+     */
     public ViewpointSelector(Session session) {
         this.session = session;
     }
 
+    /**
+     * Activate a {@link Viewpoint}. The Session internal state will be updated so
+     * that DRepresentation and RepresentationDescription matching this
+     * Viewpoint will be available.
+     * 
+     * @param viewpoint
+     *            the {@link Viewpoint} to activate
+     * @param createNewRepresentations
+     *            true to create representations which are specified as being
+     *            automatically initialized with a viewpoint initialization.
+     *            False otherwise.
+     * @param monitor
+     *            a {@link IProgressMonitor} to show progression
+     */
     public void activateViewpoint(Viewpoint viewpoint, boolean createNewRepresentations, IProgressMonitor monitor) {
         // Get the corresponding viewpoint in the resourceSet of the
         // editingDomain
@@ -83,7 +104,16 @@ public class ViewpointSelector {
             }
         }
     }
-
+    /**
+     * Deactivate a {@link Viewpoint}. The Session internal state will be updated so
+     * that DRepresentation and RepresentationDescription matching this
+     * Viewpoint will not be available anymore.
+     * 
+     * @param deselectedViewpoint
+     *            the {@link Viewpoint} to deactivate
+     * @param monitor
+     *            a {@link IProgressMonitor} to show progression
+     */
     public void deactivateViewpoint(Viewpoint deselectedViewpoint, IProgressMonitor monitor) {
         for (final DView view : session.getSelectedViews()) {
             if (view.getViewpoint() != null && EqualityHelper.areEquals(view.getViewpoint(), deselectedViewpoint)) {
