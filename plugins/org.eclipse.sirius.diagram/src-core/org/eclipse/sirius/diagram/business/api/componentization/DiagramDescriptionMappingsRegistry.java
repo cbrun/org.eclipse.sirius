@@ -40,5 +40,5 @@ public interface DiagramDescriptionMappingsRegistry {
      * Compute the available mappings for all
      * {@link DiagramDescriptionMappingsManager}.
      */
-    void computeMappings();
+    void clearchCache();
 }

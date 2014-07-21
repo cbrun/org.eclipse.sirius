@@ -41,12 +41,29 @@ public interface DiagramMappingsManager {
      * 
      * @param vps
      *            the list of viewpoints to consider.
+     * @param layers
+     *            the list of layers which are enabled.
+     * 
      * 
      * @param computeDescriptionMappings
      *            if set to <code>true</code>, the available mappings from
      *            diagram description will be recomputed
      */
-    void computeMappings(Collection<Viewpoint> vps, boolean computeDescriptionMappings);
+    void computeMappings(Collection<Viewpoint> vps, Collection<Layer> layers, boolean computeDescriptionMappings);
+    
+    /**
+     * This method will be removed. It is only part of this commit to compile
+     * legacy code.
+     * 
+     * @param layers
+     *            the enabled layers.
+     * @param computeDescriptionMappings
+     *            whether we should compute the hiearchy at the
+     *            ViewpointRegistry level or not.
+     */
+    @Deprecated
+    void computeMappings(Collection<Layer> layers, final boolean computeDescriptionMappings);
+
 
     /**
      * Get available node mappings for the diagram.

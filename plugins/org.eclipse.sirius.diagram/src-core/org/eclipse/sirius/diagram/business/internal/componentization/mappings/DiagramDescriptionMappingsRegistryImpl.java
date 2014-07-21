@@ -10,20 +10,28 @@
  *******************************************************************************/
 package org.eclipse.sirius.diagram.business.internal.componentization.mappings;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionListener;
 import org.eclipse.sirius.business.api.session.SessionManager;
+import org.eclipse.sirius.business.api.session.SessionManagerListener;
+import org.eclipse.sirius.common.tools.api.util.EqualityHelper;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsRegistry;
-import org.eclipse.sirius.business.api.session.SessionManagerListener;
 import org.eclipse.sirius.diagram.description.DiagramDescription;
 import org.eclipse.sirius.viewpoint.description.Viewpoint;
+
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 
 /**
  * The implementation of {@link DiagramDescriptionMappingsRegistry}.
@@ -49,12 +57,12 @@ public final class DiagramDescriptionMappingsRegistryImpl implements DiagramDesc
 
             @Override
             public void viewpointDeselected(final Viewpoint deselectedSirius) {
-                computeMappings();
+                clearchCache();
             }
 
             @Override
             public void viewpointSelected(final Viewpoint selectedSirius) {
-                computeMappings();
+                clearchCache();
             }
 
             @Override
@@ -82,14 +90,25 @@ public final class DiagramDescriptionMappingsRegistryImpl implements DiagramDesc
      *      org.eclipse.sirius.viewpoint.description.DiagramDescription)
      */
     public DiagramDescriptionMappingsManager getDiagramDescriptionMappingsManager(final Session session, final DiagramDescription description) {
-        final Key key = new Key(session, description);
+        Collection<Viewpoint> selectedVPs = Lists.newArrayList();
+        /*
+         * this code might be code with a null session (at least in some tests
+         * like .ReferencedModelResourceMigrationTest.
+         * testMigrationOfBaseVSMIsNotPartialWhenMigratingReferencingVSM it
+         * does.
+         */
+        if (session != null) {
+            selectedVPs.addAll(session.getSelectedViewpoints(false));
+        }
+
+        final Key key = new Key(selectedVPs, description);
         if (diagramDescriptionMappingsManagers.containsKey(key)) {
             return diagramDescriptionMappingsManagers.get(key);
         } else {
             final DiagramDescriptionMappingsManager newManager = new DiagramDescriptionMappingsManagerImpl(description);
             diagramDescriptionMappingsManagers.put(key, newManager);
             if (session != null) {
-                newManager.computeMappings(session.getSelectedViewpoints(false));
+                newManager.computeMappings(selectedVPs);
             } else {
                 newManager.computeMappings(null);
             }
@@ -100,48 +119,14 @@ public final class DiagramDescriptionMappingsRegistryImpl implements DiagramDesc
     /**
      * {@inheritDoc}
      *
-     * @see org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsRegistry#computeMappings()
+     * @see org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsRegistry#clearchCache()
      */
-    public void computeMappings() {
-
-        cleanDiagramDescriptionNoMoreInResource();
-
-        for (final Entry<Key, DiagramDescriptionMappingsManager> manager : diagramDescriptionMappingsManagers.entrySet()) {
-            if (manager.getKey().session != null) {
-                manager.getValue().computeMappings(manager.getKey().session.getSelectedViewpoints(false));
-            } else {
-                manager.getValue().computeMappings(null);
-            }
-        }
-    }
-
-    private void cleanDiagramDescriptionNoMoreInResource() {
-        final Set<Key> keysToRemove = new HashSet<Key>();
-        for (final Key key : diagramDescriptionMappingsManagers.keySet()) {
-            if (key.description.eResource() == null) {
-                keysToRemove.add(key);
-            }
-        }
-        for (final Key keyToRemove : keysToRemove) {
-            final DiagramDescriptionMappingsManager manager = diagramDescriptionMappingsManagers.get(keyToRemove);
-            diagramDescriptionMappingsManagers.remove(keyToRemove);
-            manager.dispose();
-        }
+    public void clearchCache() {
+        diagramDescriptionMappingsManagers.clear();
     }
 
     private void cleanDiagramDescriptionMappingsManagers(final Session session) {
-        final Set<Key> keysToRemove = new HashSet<Key>();
-        for (final Key key : diagramDescriptionMappingsManagers.keySet()) {
-            if (key.session == session) {
-                keysToRemove.add(key);
-            }
-        }
-        for (final Key keyToRemove : keysToRemove) {
-            // diagramDescriptionMappingsManagers.remove(keyToRemove);
-            final DiagramDescriptionMappingsManager manager = diagramDescriptionMappingsManagers.get(keyToRemove);
-            diagramDescriptionMappingsManagers.remove(keyToRemove);
-            manager.dispose();
-        }
+        clearchCache();
     }
 
     /**
@@ -151,12 +136,18 @@ public final class DiagramDescriptionMappingsRegistryImpl implements DiagramDesc
      */
     private class Key {
 
-        private final Session session;
-
         private final DiagramDescription description;
 
-        public Key(final Session session, final DiagramDescription description) {
-            this.session = session;
+        private List<Viewpoint> selectedViewpoints;
+
+        public Key(final Collection<Viewpoint> viewpoints, final DiagramDescription description) {
+            this.selectedViewpoints = Ordering.natural().onResultOf(new Function<Viewpoint, String>() {
+
+                @Override
+                public String apply(Viewpoint input) {
+                    return input.getName();
+                }
+            }).sortedCopy(viewpoints);
             this.description = description;
         }
 
@@ -171,7 +162,7 @@ public final class DiagramDescriptionMappingsRegistryImpl implements DiagramDesc
             int result = 1;
             result = prime * result + DiagramDescriptionMappingsRegistryImpl.this.hashCode();
             result = prime * result + ((description == null) ? 0 : description.hashCode());
-            result = prime * result + ((session == null) ? 0 : session.hashCode());
+            result = prime * result + ((selectedViewpoints == null) ? 0 : selectedViewpoints.hashCode());
             return result;
         }
 
@@ -194,7 +185,46 @@ public final class DiagramDescriptionMappingsRegistryImpl implements DiagramDesc
             }
 
             final Key other = (Key) obj;
-            return description == other.description && session == other.session;
+            if (description == null) {
+                if (other.description != null)
+                    return false;
+            } else if (!EqualityHelper.areEquals(description, other.description))
+                return false;
+            if (selectedViewpoints == null) {
+                if (other.selectedViewpoints != null)
+                    return false;
+            } else if (selectedViewpoints.size() == other.selectedViewpoints.size()) {
+                Iterator<Viewpoint> itThis = selectedViewpoints.iterator();
+                Iterator<Viewpoint> itOther = other.selectedViewpoints.iterator();
+                while (itThis.hasNext() && itOther.hasNext()) {
+                    Viewpoint thisLayer = itThis.next();
+                    Viewpoint otherLayer = itOther.next();
+                    if (!EqualityHelper.areEquals(thisLayer, otherLayer)) {
+                        return false;
+                    }
+                }
+
+            } else {
+                return false;
+            }
+
+            return true;
+        }
+
+        public Collection<Viewpoint> getSelectedViewpoints() {
+            return this.selectedViewpoints;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("description", description.getName())
+                    .add("viewpoints", Joiner.on(",").join(Iterables.transform(this.selectedViewpoints, new Function<Viewpoint, String>() {
+
+                        @Override
+                        public String apply(Viewpoint input) {
+                            return input.getName();
+                        }
+                    }))).toString();
         }
     }
     // CHECKSTYLE:ON

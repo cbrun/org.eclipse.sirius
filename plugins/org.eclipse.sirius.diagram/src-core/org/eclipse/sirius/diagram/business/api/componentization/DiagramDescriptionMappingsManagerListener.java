@@ -18,13 +18,18 @@ import org.eclipse.sirius.viewpoint.description.Viewpoint;
  * A listener to know {@link DiagramDescriptionMappingsManager} recompute
  * mappings.
  * 
+ * The implementation does not use this interface anymore. It was not intended
+ * to be used by other implementations and will be deleted.
+ * 
  * @author mchauvin
  * @since 0.9.0
  */
+@Deprecated
 public interface DiagramDescriptionMappingsManagerListener {
 
     /**
      * This method is called when mappings have been computed.
+     * 
      * @param enabledViewpoints 
      */
     void mappingsComputed(Collection<Viewpoint> enabledViewpoints);

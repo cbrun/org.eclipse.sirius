@@ -11,29 +11,22 @@
 package org.eclipse.sirius.diagram.business.internal.componentization.mappings;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
-import org.eclipse.emf.common.notify.Notification;
-import org.eclipse.emf.common.notify.impl.AdapterImpl;
-import org.eclipse.sirius.business.api.dialect.DialectManager;
 import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionListener;
 import org.eclipse.sirius.business.api.session.SessionManager;
 import org.eclipse.sirius.business.api.session.SessionManagerListener;
 import org.eclipse.sirius.diagram.DDiagram;
-import org.eclipse.sirius.diagram.DSemanticDiagram;
-import org.eclipse.sirius.diagram.DiagramPackage;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsRegistry;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.helper.layers.LayerService;
 import org.eclipse.sirius.diagram.description.DiagramDescription;
-import org.eclipse.sirius.diagram.description.DiagramExtensionDescription;
-import org.eclipse.sirius.diagram.description.Layer;
-import org.eclipse.sirius.viewpoint.DRepresentation;
 
 /**
  * Registry of diagram mappings.
@@ -41,15 +34,15 @@ import org.eclipse.sirius.viewpoint.DRepresentation;
  * @author mchauvin
  * @since 0.9.0
  */
-public final class DiagramMappingsManagerRegistryImpl extends AdapterImpl implements DiagramMappingsManagerRegistry {
+public final class DiagramMappingsManagerRegistryImpl implements DiagramMappingsManagerRegistry {
 
-    private Map<DDiagram, DiagramMappingsManager> diagramMappingsManagers = new HashMap<DDiagram, DiagramMappingsManager>();
+    private Map<DiagramMappingsManagerKey, DiagramMappingsManager> previousComputationResults = new HashMap<DiagramMappingsManagerKey, DiagramMappingsManager>();
 
     /**
      * Construct a new {@link DiagramMappingsManagerRegistryImpl} instance.
      */
     private DiagramMappingsManagerRegistryImpl() {
-        diagramMappingsManagers = new HashMap<DDiagram, DiagramMappingsManager>();
+        previousComputationResults = new HashMap<DiagramMappingsManagerKey, DiagramMappingsManager>();
         SessionManager.INSTANCE.addSessionsListener(new SessionManagerListener.Stub() {
             @Override
             public void notifyRemoveSession(final Session removedSession) {
@@ -86,83 +79,51 @@ public final class DiagramMappingsManagerRegistryImpl extends AdapterImpl implem
         if (diagram == null) {
             throw new IllegalArgumentException("Parameter \"diagram\" cannot be null");
         }
-        if (diagramMappingsManagers.containsKey(diagram)) {
-            return diagramMappingsManagers.get(diagram);
+        DiagramMappingsManagerKey key = DiagramMappingsManagerKey.fromDiagram(diagram);
+
+        if (previousComputationResults.containsKey(key)) {
+            return previousComputationResults.get(key);
         } else {
             final DiagramDescription desc = diagram.getDescription();
             final DiagramDescriptionMappingsRegistry mappingsRegistry = DiagramDescriptionMappingsRegistry.INSTANCE;
             final DiagramDescriptionMappingsManager descManager = mappingsRegistry.getDiagramDescriptionMappingsManager(session, desc);
-
-            final DiagramMappingsManager newManager = new DiagramMappingsManagerImpl(diagram, descManager);
-            diagram.eAdapters().add(this);
-            if (session != null) {
-                newManager.computeMappings(session.getSelectedViewpoints(false), false);
+            DiagramMappingsManager newManager = null;
+            if (LayerService.withoutLayersMode(desc)) {
+                newManager = new DiagramMappingsManagerNoLayerImpl(descManager);
             } else {
-                newManager.computeMappings(null, false);
+                newManager = new DiagramMappingsManagerImpl(descManager);
             }
-            diagramMappingsManagers.put(diagram, newManager);
+
+            if (session != null) {
+                newManager.computeMappings(session.getSelectedViewpoints(false), diagram.getActivatedLayers(), false);
+            } else {
+                newManager.computeMappings(null, diagram.getActivatedLayers(), false);
+            }
+            previousComputationResults.put(key, newManager);
             return newManager;
         }
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @see org.eclipse.emf.common.notify.impl.AdapterImpl#notifyChanged(org.eclipse.emf.common.notify.Notification)
-     */
-    @Override
-    public void notifyChanged(final Notification msg) {
-        final Object notifier = msg.getNotifier();
-        if (notifier instanceof DDiagram) {
-            final int featureID = msg.getFeatureID(DDiagram.class);
-            if (featureID == DiagramPackage.DDIAGRAM__ACTIVATED_LAYERS) {
-
-                switch (msg.getEventType()) {
-                case Notification.ADD:
-                case Notification.REMOVE:
-                    computeMappings((DDiagram) notifier, (Layer) msg.getNewValue());
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-    }
-
-    private void computeMappings(final DDiagram diagram, final Layer layer) {
-        final DiagramMappingsManager manager = diagramMappingsManagers.get(diagram);
-        if (manager != null) {
-
-            boolean needToRecomputeDescMappings = false;
-            if (layer != null && layer.eContainer() instanceof DiagramExtensionDescription) {
-                needToRecomputeDescMappings = true;
-            }
-            Session sess = SessionManager.INSTANCE.getSession(((DSemanticDiagram) diagram).getTarget());
-            if (sess != null) {
-                manager.computeMappings(sess.getSelectedViewpoints(false), needToRecomputeDescMappings);
-            } else {
-                manager.computeMappings(null, needToRecomputeDescMappings);
-            }
-        }
-    }
-
     private void cleanDiagramMappingsManagers(final Session session) {
+        previousComputationResults.clear();
 
-        final Set<DDiagram> diagramInSession = new HashSet<DDiagram>();
-        for (final DRepresentation representation : DialectManager.INSTANCE.getAllRepresentations(session)) {
-            if (representation instanceof DDiagram) {
-                diagramInSession.add((DDiagram) representation);
-            }
-        }
-        final Set<DDiagram> keysToRemove = new HashSet<DDiagram>();
-        for (final DDiagram diagram : diagramMappingsManagers.keySet()) {
-            if (diagramInSession.contains(diagram)) {
-                keysToRemove.add(diagram);
-            }
-        }
-        for (final DDiagram keyToRemove : keysToRemove) {
-            diagramMappingsManagers.remove(keyToRemove);
-        }
+        // final Set<DDiagram> diagramInSession = new HashSet<DDiagram>();
+        // for (final DRepresentation representation :
+        // DialectManager.INSTANCE.getAllRepresentations(session)) {
+        // if (representation instanceof DDiagram) {
+        // diagramInSession.add((DDiagram) representation);
+        // }
+        // }
+        // FIXME before commit..see how we cleanup.
+        // final Set<DDiagram> keysToRemove = new HashSet<DDiagram>();
+        // for (final DDiagram diagram : diagramMappingsManagers.keySet()) {
+        // if (diagramInSession.contains(diagram)) {
+        // keysToRemove.add(diagram);
+        // }
+        // }
+        // for (final DDiagram keyToRemove : keysToRemove) {
+        // diagramMappingsManagers.remove(keyToRemove);
+        // }
     }
 
     /**
@@ -171,14 +132,14 @@ public final class DiagramMappingsManagerRegistryImpl extends AdapterImpl implem
      * @see org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry#removeDiagramMappingsManagers(org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager)
      */
     public void removeDiagramMappingsManagers(DiagramMappingsManager manager) {
-        final Set<DDiagram> toRemove = new LinkedHashSet<DDiagram>();
-        for (final Map.Entry<DDiagram, DiagramMappingsManager> entry : diagramMappingsManagers.entrySet()) {
+        final Set<DiagramMappingsManagerKey> toRemove = new LinkedHashSet<DiagramMappingsManagerKey>();
+        for (final Entry<DiagramMappingsManagerKey, DiagramMappingsManager> entry : previousComputationResults.entrySet()) {
             if (entry.getValue() == manager) {
                 toRemove.add(entry.getKey());
             }
         }
-        for (final DDiagram diagramToRemove : toRemove) {
-            diagramMappingsManagers.remove(diagramToRemove);
+        for (final DiagramMappingsManagerKey diagramToRemove : toRemove) {
+            previousComputationResults.remove(diagramToRemove);
         }
     }
 }

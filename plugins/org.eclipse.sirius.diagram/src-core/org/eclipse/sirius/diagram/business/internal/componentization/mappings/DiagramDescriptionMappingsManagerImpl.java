@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.sirius.diagram.business.internal.componentization.mappings;
 
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +17,6 @@ import java.util.List;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramComponentizationManager;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManagerListener;
 import org.eclipse.sirius.diagram.business.api.helper.layers.LayerService;
 import org.eclipse.sirius.diagram.description.AbstractNodeMapping;
 import org.eclipse.sirius.diagram.description.ContainerMapping;
@@ -43,8 +40,6 @@ public class DiagramDescriptionMappingsManagerImpl implements DiagramDescription
 
     private EList<EdgeMapping> edgeMappings;
 
-    private final List<DiagramDescriptionMappingsManagerListener> listeners;
-
     /**
      * Create a new instance.
      * 
@@ -53,7 +48,6 @@ public class DiagramDescriptionMappingsManagerImpl implements DiagramDescription
      */
     public DiagramDescriptionMappingsManagerImpl(final DiagramDescription description) {
         this.description = description;
-        this.listeners = new ArrayList<DiagramDescriptionMappingsManagerListener>(2);
     }
 
     /**
@@ -64,9 +58,6 @@ public class DiagramDescriptionMappingsManagerImpl implements DiagramDescription
         edgeMappings = new DiagramComponentizationManager().getAllEdgeMappings(enabledViewpoints, this.description);
         containerMappings = new DiagramComponentizationManager().getAllContainerMappings(enabledViewpoints, this.description);
 
-        for (final DiagramDescriptionMappingsManagerListener listener : listeners) {
-            listener.mappingsComputed(enabledViewpoints);
-        }
     }
 
     /**
@@ -136,44 +127,12 @@ public class DiagramDescriptionMappingsManagerImpl implements DiagramDescription
     }
 
     /**
-     * 
-     * {@inheritDoc}
-     * 
-     * @see org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager#addListener(org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManagerListener)
-     */
-    public void addListener(final DiagramDescriptionMappingsManagerListener listener) {
-        this.listeners.add(listener);
-    }
-
-    /**
-     * 
-     * {@inheritDoc}
-     * 
-     * @see org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager#removeListener(org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManagerListener)
-     */
-    public void removeListener(final DiagramDescriptionMappingsManagerListener listener) {
-        this.listeners.remove(listener);
-    }
-
-    /**
      * {@inheritDoc}
      * 
      * @see org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager#isLayerMode()
      */
     public boolean isLayerMode() {
         return !LayerService.withoutLayersMode(description);
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager#dispose()
-     */
-    public void dispose() {
-        for (final DiagramDescriptionMappingsManagerListener listener : listeners) {
-            listener.dispose();
-        }
-        listeners.clear();
     }
 
 }

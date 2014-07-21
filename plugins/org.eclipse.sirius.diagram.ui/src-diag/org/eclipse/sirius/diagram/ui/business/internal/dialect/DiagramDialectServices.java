@@ -467,7 +467,7 @@ public class DiagramDialectServices extends AbstractRepresentationDialectService
      */
     @Override
     public void invalidateMappingCache() {
-        DiagramDescriptionMappingsRegistry.INSTANCE.computeMappings();
+        DiagramDescriptionMappingsRegistry.INSTANCE.clearchCache();
     }
 
     /**

@@ -29,22 +29,6 @@ import org.eclipse.sirius.viewpoint.description.Viewpoint;
 public interface DiagramDescriptionMappingsManager {
 
     /**
-     * Add a listener.
-     * 
-     * @param listener
-     *            the listener to add
-     */
-    void addListener(DiagramDescriptionMappingsManagerListener listener);
-
-    /**
-     * Remove a listener.
-     * 
-     * @param listener
-     *            the listener to remove
-     */
-    void removeListener(DiagramDescriptionMappingsManagerListener listener);
-
-    /**
      * Compute available mappings for this diagram description based.
      * 
      * @param viewpoints
@@ -108,6 +92,4 @@ public interface DiagramDescriptionMappingsManager {
      */
     boolean isLayerMode();
 
-    /** Dispose this manager. */
-    void dispose();
 }

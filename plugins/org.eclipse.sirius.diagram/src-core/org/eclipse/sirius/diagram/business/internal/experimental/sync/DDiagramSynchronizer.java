@@ -262,6 +262,13 @@ public class DDiagramSynchronizer {
     private void initDiagramRelatedFields() {
         this.edgeHelper = new DEdgeSynchronizerHelper(this, diagram, accessor);
         this.nodHelper = new DNodeSynchronizerHelper(this, diagram, accessor);
+        initRefreshRelatedFields();
+    }
+
+    /**
+     * Re-init the fields which are only making sense for a single refresh.
+     */
+    private void initRefreshRelatedFields() {
         this.diagramMappingsManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, diagram);
         this.mappingsUpdater = new MappingsUpdater(diagram, diagramMappingsManager, this);
     }
@@ -337,6 +344,7 @@ public class DDiagramSynchronizer {
      */
     public void refresh(final IProgressMonitor monitor) {
         DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.REFRESH_DIAGRAM_KEY);
+        initRefreshRelatedFields();
         refreshOperation(monitor);
         DslCommonPlugin.PROFILER.stopWork(SiriusTasksKey.REFRESH_DIAGRAM_KEY);
     }
