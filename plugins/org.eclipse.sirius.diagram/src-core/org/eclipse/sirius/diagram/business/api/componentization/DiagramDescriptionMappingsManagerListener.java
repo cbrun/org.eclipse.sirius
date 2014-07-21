@@ -12,6 +12,7 @@ package org.eclipse.sirius.diagram.business.api.componentization;
 
 import java.util.Collection;
 
+import org.eclipse.sirius.diagram.description.Layer;
 import org.eclipse.sirius.viewpoint.description.Viewpoint;
 
 /**
@@ -25,7 +26,8 @@ public interface DiagramDescriptionMappingsManagerListener {
 
     /**
      * This method is called when mappings have been computed.
-     * @param enabledViewpoints 
+     * 
+     * @param enabledViewpoints
      */
     void mappingsComputed(Collection<Viewpoint> enabledViewpoints);
 

@@ -36,17 +36,6 @@ import org.eclipse.sirius.viewpoint.description.Viewpoint;
  */
 public interface DiagramMappingsManager {
 
-    /**
-     * Compute the available mappings depending on the activated layers.
-     * 
-     * @param vps
-     *            the list of viewpoints to consider.
-     * 
-     * @param computeDescriptionMappings
-     *            if set to <code>true</code>, the available mappings from
-     *            diagram description will be recomputed
-     */
-    void computeMappings(Collection<Viewpoint> vps, boolean computeDescriptionMappings);
 
     /**
      * Get available node mappings for the diagram.

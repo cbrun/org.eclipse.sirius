@@ -48,13 +48,13 @@ import com.google.common.collect.Sets;
  * 
  * @author mchauvin
  */
-public final class DiagramMappingsManagerImpl implements DiagramMappingsManager, DiagramDescriptionMappingsManagerListener {
-
-    private final DDiagram diagram;
+public final class DiagramMappingsManagerImpl implements DiagramMappingsManager, DiagramDescriptionMappingsManagerListener  {
 
     private final DiagramDescriptionMappingsManager descriptionMappings;
 
     private GlobalMappingsTable mappingsTable;
+
+    private Collection<Layer> activatedLayers = Sets.newLinkedHashSet();
 
     /**
      * Construct a new instance of.
@@ -64,8 +64,7 @@ public final class DiagramMappingsManagerImpl implements DiagramMappingsManager,
      * @param descriptionMappings
      *            the diagram description mappings manager to rely on
      */
-    public DiagramMappingsManagerImpl(final DDiagram diagram, final DiagramDescriptionMappingsManager descriptionMappings) {
-        this.diagram = diagram;
+    public DiagramMappingsManagerImpl(final DiagramDescriptionMappingsManager descriptionMappings) {
         this.descriptionMappings = descriptionMappings;
         this.descriptionMappings.addListener(this);
         this.mappingsTable = new GlobalMappingsTable(descriptionMappings);
@@ -75,11 +74,12 @@ public final class DiagramMappingsManagerImpl implements DiagramMappingsManager,
      * {@inheritDoc}
      **/
 
-    public void computeMappings(Collection<Viewpoint> enabledVPs, final boolean computeDescriptionMappings) {
+    public void computeMappings(Collection<Viewpoint> enabledVPs, Collection<Layer> activatedLayers, final boolean computeDescriptionMappings) {
         if (computeDescriptionMappings) {
             this.descriptionMappings.computeMappings(enabledVPs);
         }
-        mappingsTable.build(diagram.getActivatedLayers());
+        mappingsTable.build(activatedLayers);
+        this.activatedLayers  = activatedLayers;
     }
 
     /**
@@ -325,7 +325,7 @@ public final class DiagramMappingsManagerImpl implements DiagramMappingsManager,
      * @see org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManagerListener#mappingsComputed()
      */
     public void mappingsComputed(Collection<Viewpoint> enabledViewpoints) {
-        computeMappings(enabledViewpoints, false);
+        computeMappings(enabledViewpoints,activatedLayers, false);
     }
 
     /**

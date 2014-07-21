@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.sirius.diagram.business.internal.componentization.mappings;
 
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
