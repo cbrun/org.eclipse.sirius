@@ -128,7 +128,7 @@ public final class MappingsFromViewpointComputationCacheImpl implements Mappings
     private void cleanDiagramDescriptionNoMoreInResource() {
         final Set<Key> keysToRemove = new HashSet<Key>();
         for (final Key key : diagramDescriptionMappingsManagers.keySet()) {
-            if (key.description.eResource() == null) {
+            if (key.description == null || key.description.eResource() == null) {
                 keysToRemove.add(key);
             }
         }
@@ -140,19 +140,20 @@ public final class MappingsFromViewpointComputationCacheImpl implements Mappings
     }
 
     private void cleanDiagramDescriptionMappingsManagers(final Session session) {
-        final Set<Key> keysToRemove = new HashSet<Key>();
-        for (final Key key : diagramDescriptionMappingsManagers.keySet()) {
-            // TODO before commit : figure out how to cleanup
-            // if (key.session == session) {
-            // keysToRemove.add(key);
-            // }
-        }
-        for (final Key keyToRemove : keysToRemove) {
-            // diagramDescriptionMappingsManagers.remove(keyToRemove);
-            final MappingsFromViewpointsComputationResult manager = diagramDescriptionMappingsManagers.get(keyToRemove);
-            diagramDescriptionMappingsManagers.remove(keyToRemove);
-            manager.dispose();
-        }
+        diagramDescriptionMappingsManagers.clear();
+//        final Set<Key> keysToRemove = new HashSet<Key>();
+//        for (final Key key : diagramDescriptionMappingsManagers.keySet()) {
+//            // TODO before commit : figure out how to cleanup
+//            // if (key.session == session) {
+//            // keysToRemove.add(key);
+//            // }
+//        }
+//        for (final Key keyToRemove : keysToRemove) {
+//            // diagramDescriptionMappingsManagers.remove(keyToRemove);
+//            final MappingsFromViewpointsComputationResult manager = diagramDescriptionMappingsManagers.get(keyToRemove);
+//            diagramDescriptionMappingsManagers.remove(keyToRemove);
+//            manager.dispose();
+//        }
     }
 
     /**
