@@ -25,6 +25,7 @@ import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLaye
 import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
 import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationCache;
 import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult;
+import org.eclipse.sirius.diagram.business.api.helper.layers.LayerService;
 import org.eclipse.sirius.diagram.description.DiagramDescription;
 
 /**
@@ -33,15 +34,15 @@ import org.eclipse.sirius.diagram.description.DiagramDescription;
  * @author mchauvin
  * @since 0.9.0
  */
-public final class MappingsFromLayerComputationCacheImpl  implements MappingsFromLayersComputationCache {
+public final class MappingsFromLayerComputationCacheImpl implements MappingsFromLayersComputationCache {
 
-    private Map<MappingsFromLayerComputationKey, MappingsFromLayersComputationResult> diagramMappingsManagers = new HashMap<MappingsFromLayerComputationKey, MappingsFromLayersComputationResult>();
+    private Map<MappingsFromLayerComputationKey, MappingsFromLayersComputationResult> previousComputationResults = new HashMap<MappingsFromLayerComputationKey, MappingsFromLayersComputationResult>();
 
     /**
      * Construct a new {@link MappingsFromLayerComputationCacheImpl} instance.
      */
     private MappingsFromLayerComputationCacheImpl() {
-        diagramMappingsManagers = new HashMap<MappingsFromLayerComputationKey, MappingsFromLayersComputationResult>();
+        previousComputationResults = new HashMap<MappingsFromLayerComputationKey, MappingsFromLayersComputationResult>();
         SessionManager.INSTANCE.addSessionsListener(new SessionManagerListener.Stub() {
             @Override
             public void notifyRemoveSession(final Session removedSession) {
@@ -80,35 +81,39 @@ public final class MappingsFromLayerComputationCacheImpl  implements MappingsFro
         }
         MappingsFromLayerComputationKey key = MappingsFromLayerComputationKey.fromDiagram(diagram);
 
-
-        if (diagramMappingsManagers.containsKey(key)) {
-            return diagramMappingsManagers.get(key);
+        if (previousComputationResults.containsKey(key)) {
+            return previousComputationResults.get(key);
         } else {
             final DiagramDescription desc = diagram.getDescription();
             final MappingsFromViewpointsComputationCache mappingsRegistry = MappingsFromViewpointsComputationCache.INSTANCE;
             final MappingsFromViewpointsComputationResult descManager = mappingsRegistry.getDiagramDescriptionMappingsManager(session, desc);
+            MappingsFromLayersComputationResult newManager = null;
+            if (LayerService.withoutLayersMode(desc)) {
+                newManager = new NoLayerModeMappingsFromLayersComputationResultImpl(descManager);
+            } else {
+                newManager = new MappingsFromLayersComputationResultImpl(descManager);
+            }
 
-            final MappingsFromLayersComputationResultImpl newManager = new MappingsFromLayersComputationResultImpl(descManager);
             if (session != null) {
                 newManager.computeMappings(session.getSelectedViewpoints(false), diagram.getActivatedLayers(), false);
             } else {
                 newManager.computeMappings(null, diagram.getActivatedLayers(), false);
             }
-            diagramMappingsManagers.put(key, newManager);
+            previousComputationResults.put(key, newManager);
             return newManager;
         }
     }
 
-
     private void cleanDiagramMappingsManagers(final Session session) {
-        diagramMappingsManagers.clear();
-        
-//        final Set<DDiagram> diagramInSession = new HashSet<DDiagram>();
-//        for (final DRepresentation representation : DialectManager.INSTANCE.getAllRepresentations(session)) {
-//            if (representation instanceof DDiagram) {
-//                diagramInSession.add((DDiagram) representation);
-//            }
-//        }
+        previousComputationResults.clear();
+
+        // final Set<DDiagram> diagramInSession = new HashSet<DDiagram>();
+        // for (final DRepresentation representation :
+        // DialectManager.INSTANCE.getAllRepresentations(session)) {
+        // if (representation instanceof DDiagram) {
+        // diagramInSession.add((DDiagram) representation);
+        // }
+        // }
         // FIXME before commit..see how we cleanup.
         // final Set<DDiagram> keysToRemove = new HashSet<DDiagram>();
         // for (final DDiagram diagram : diagramMappingsManagers.keySet()) {
@@ -128,13 +133,13 @@ public final class MappingsFromLayerComputationCacheImpl  implements MappingsFro
      */
     public void removeDiagramMappingsManagers(MappingsFromLayersComputationResult manager) {
         final Set<MappingsFromLayerComputationKey> toRemove = new LinkedHashSet<MappingsFromLayerComputationKey>();
-        for (final Entry<MappingsFromLayerComputationKey, MappingsFromLayersComputationResult> entry : diagramMappingsManagers.entrySet()) {
+        for (final Entry<MappingsFromLayerComputationKey, MappingsFromLayersComputationResult> entry : previousComputationResults.entrySet()) {
             if (entry.getValue() == manager) {
                 toRemove.add(entry.getKey());
             }
         }
         for (final MappingsFromLayerComputationKey diagramToRemove : toRemove) {
-            diagramMappingsManagers.remove(diagramToRemove);
+            previousComputationResults.remove(diagramToRemove);
         }
     }
 }
