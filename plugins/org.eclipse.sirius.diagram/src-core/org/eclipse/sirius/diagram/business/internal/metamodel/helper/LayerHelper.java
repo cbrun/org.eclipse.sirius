@@ -30,7 +30,7 @@ import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DDiagramElement;
 import org.eclipse.sirius.diagram.DDiagramElementContainer;
 import org.eclipse.sirius.diagram.DNode;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
 import org.eclipse.sirius.diagram.business.internal.metamodel.description.operations.EdgeMappingImportWrapper;
 import org.eclipse.sirius.diagram.description.ContainerMapping;
 import org.eclipse.sirius.diagram.description.DescriptionPackage;
@@ -164,7 +164,7 @@ public final class LayerHelper {
      *            the diagram element.
      * @return <code>true</code> if it is, <code>false</code> otherwise
      */
-    public static boolean isInActivatedLayer(DiagramMappingsManager session, final DDiagramElement element) {
+    public static boolean isInActivatedLayer(MappingsFromLayersComputationResult session, final DDiagramElement element) {
         return isInActivatedLayer(session, element, element.getParentDiagram());
     }
 
@@ -185,7 +185,7 @@ public final class LayerHelper {
      *            diagram element.
      * @return <code>true</code> if it is, <code>false</code> otherwise
      */
-    public static boolean isInActivatedLayer(DiagramMappingsManager session, final DDiagramElement element, final DDiagram parentDiagram) {
+    public static boolean isInActivatedLayer(MappingsFromLayersComputationResult session, final DDiagramElement element, final DDiagram parentDiagram) {
         final DiagramElementMapping mapping = element.getDiagramElementMapping();
 
         if (!LayerHelper.withoutLayersMode(mapping)) {
@@ -272,7 +272,7 @@ public final class LayerHelper {
         return false;
     }
 
-    private static boolean hideSubMappingsInImporters(final DiagramMappingsManager session, final DDiagram diagram, final Collection<Setting> settings, final DiagramElementMapping mapping) {
+    private static boolean hideSubMappingsInImporters(final MappingsFromLayersComputationResult session, final DDiagram diagram, final Collection<Setting> settings, final DiagramElementMapping mapping) {
 
         boolean hide = false;
 
@@ -326,7 +326,7 @@ public final class LayerHelper {
      *            the diagram.
      * @return <code>true</code> if it is, <code>false</code> otherwise
      */
-    public static boolean isInActivatedLayer(DiagramMappingsManager session, final DDiagram diagram, final DiagramElementMapping mapping) {
+    public static boolean isInActivatedLayer(MappingsFromLayersComputationResult session, final DDiagram diagram, final DiagramElementMapping mapping) {
         if (!LayerHelper.withoutLayersMode(mapping)) {
 
             boolean visible = false;

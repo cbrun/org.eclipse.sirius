@@ -26,8 +26,8 @@ import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DSemanticDiagram;
 import org.eclipse.sirius.diagram.DiagramPlugin;
 import org.eclipse.sirius.diagram.DragAndDropTarget;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.query.EObjectQuery;
 import org.eclipse.sirius.diagram.business.internal.experimental.sync.AbstractDNodeCandidate;
 import org.eclipse.sirius.diagram.business.internal.experimental.sync.DDiagramElementSynchronizer;
@@ -98,7 +98,7 @@ public class CreateContainerTask extends AbstractCommandTask implements ICreatio
         IInterpreter interpreter = session.getInterpreter();
         DDiagramElementSynchronizer dDiagramElementSynchronizer = new DDiagramElementSynchronizer(dSemanticDiagram, interpreter, modelAccessor);
         Collection<EObject> createdObjects = cmd.getCreatedObjects();
-        DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, dSemanticDiagram);
+        MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, dSemanticDiagram);
         for (EObject semanticElt : createdObjects) {
             BestMappingGetter bestMappingGetter = new BestMappingGetter((DSemanticDecorator) containerView, semanticElt);
             ContainerMapping bestMapping = bestMappingGetter.getBestContainerMapping(tool.getContainerMappings());

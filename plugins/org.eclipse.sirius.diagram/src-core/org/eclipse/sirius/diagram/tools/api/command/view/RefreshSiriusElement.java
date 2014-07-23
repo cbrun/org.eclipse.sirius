@@ -21,8 +21,8 @@ import org.eclipse.sirius.common.tools.api.listener.Notification;
 import org.eclipse.sirius.common.tools.api.listener.NotificationUtil;
 import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DDiagramElement;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayServiceManager;
 import org.eclipse.sirius.tools.api.command.ui.RefreshFilter;
 import org.eclipse.sirius.viewpoint.DRefreshable;
@@ -113,7 +113,7 @@ public class RefreshSiriusElement extends RecordingCommand {
             DDiagram parentDiagram = dde.getParentDiagram();
             Session session = SessionManager.INSTANCE.getSession(dde.getTarget());
             NotificationUtil.sendNotification(parentDiagram, Notification.Kind.START, Notification.VISIBILITY);
-            DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, parentDiagram);
+            MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, parentDiagram);
             DisplayServiceManager.INSTANCE.getDisplayService().computeVisibility(mappingManager, parentDiagram, dde);
             NotificationUtil.sendNotification(parentDiagram, Notification.Kind.STOP, Notification.VISIBILITY);
         }

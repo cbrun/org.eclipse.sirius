@@ -12,7 +12,7 @@ package org.eclipse.sirius.diagram.business.api.componentization;
 
 import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.diagram.DDiagram;
-import org.eclipse.sirius.diagram.business.internal.componentization.mappings.DiagramMappingsManagerRegistryImpl;
+import org.eclipse.sirius.diagram.business.internal.componentization.mappings.MappingsFromLayerComputationCacheImpl;
 
 /**
  * This class will move in diagram plug-in when refresh refactoring will occurs.
@@ -20,12 +20,12 @@ import org.eclipse.sirius.diagram.business.internal.componentization.mappings.Di
  * @author mchauvin
  * @since 0.9.0
  */
-public interface DiagramMappingsManagerRegistry {
+public interface MappingsFromLayersComputationCache {
 
     /**
      * The shared instance.
      */
-    DiagramMappingsManagerRegistry INSTANCE = DiagramMappingsManagerRegistryImpl.init();
+    MappingsFromLayersComputationCache INSTANCE = MappingsFromLayerComputationCacheImpl.init();
 
     /**
      * Get the diagram mappings manager.
@@ -36,7 +36,7 @@ public interface DiagramMappingsManagerRegistry {
      *            the diagram for which to retrieve the mappings manager
      * @return the manager to retrieve available mappings for a given diagram
      */
-    DiagramMappingsManager getDiagramMappingsManager(final Session session, final DDiagram diagram);
+    MappingsFromLayersComputationResult getDiagramMappingsManager(final Session session, final DDiagram diagram);
 
     /**
      * Remove the given diagram mappings manager, forcing them to be recomputed
@@ -46,6 +46,6 @@ public interface DiagramMappingsManagerRegistry {
      * @param manager
      *            the diagram mappings manager to remove
      */
-    void removeDiagramMappingsManagers(final DiagramMappingsManager manager);
+    void removeDiagramMappingsManagers(final MappingsFromLayersComputationResult manager);
 
 }

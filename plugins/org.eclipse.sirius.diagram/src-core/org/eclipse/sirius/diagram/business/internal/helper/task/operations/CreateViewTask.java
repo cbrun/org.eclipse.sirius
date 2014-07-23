@@ -39,8 +39,8 @@ import org.eclipse.sirius.diagram.DSemanticDiagram;
 import org.eclipse.sirius.diagram.DiagramPlugin;
 import org.eclipse.sirius.diagram.DragAndDropTarget;
 import org.eclipse.sirius.diagram.EdgeTarget;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayMode;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayService;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayServiceManager;
@@ -175,7 +175,7 @@ public class CreateViewTask extends AbstractOperationTask {
                 if (extPackage.eInstanceOf(semanticElt, abstractNodeMapping.getDomainClass())) {
                     AbstractDNodeCandidate abstractDNodeCandidate = new AbstractDNodeCandidate(abstractNodeMapping, semanticElt, (DragAndDropTarget) containerView);
                     DDiagramElementSynchronizer dDiagramElementSynchronizer = new DDiagramElementSynchronizer(parentDDiagram, interpreter, extPackage);
-                    DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
+                    MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
                     AbstractDNode createdAbstractDNode = dDiagramElementSynchronizer.createNewNode(mappingManager, abstractDNodeCandidate,
                             abstractNodeMapping.eContainingFeature() == DescriptionPackage.Literals.ABSTRACT_NODE_MAPPING__BORDERED_NODE_MAPPINGS);
                     AbstractNodeMappingSpecOperations.createBorderingNodes(abstractNodeMapping, semanticElt, createdAbstractDNode, Collections.emptyList(), parentDDiagram);
@@ -202,7 +202,7 @@ public class CreateViewTask extends AbstractOperationTask {
         final DisplayService service = DisplayServiceManager.INSTANCE.getDisplayService(DisplayMode.CREATION);
         if (service != null && diagramElement != null && diagram != null) {
             Session session = SessionManager.INSTANCE.getSession(diagramElement.getTarget());
-            DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, diagram);
+            MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, diagram);
             diagramElement.setVisible(service.computeVisibility(mappingManager, diagram, diagramElement));
             if (!service.computeLabelVisibility(diagram, diagramElement)) {
                 HideFilterHelper.INSTANCE.hideLabel(diagramElement);
@@ -247,7 +247,7 @@ public class CreateViewTask extends AbstractOperationTask {
         AbstractToolDescription tool = getAbstractToolDescription();
         EdgeMapping bestEdgeMapping = (EdgeMapping) createEdgeView.getMapping();
         boolean needsPathUpdate = needsPathUpdate(bestEdgeMapping, tool);
-        DiagramMappingsManager diagramMappingsManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
+        MappingsFromLayersComputationResult diagramMappingsManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
         Collection<DiagramElementMapping> sourceMappingAndTheirMappingImports = getAbstractNodeMappingImports(diagramMappingsManager, bestEdgeMapping.getSourceMapping());
         sourceMappingAndTheirMappingImports.addAll(bestEdgeMapping.getSourceMapping());
         Collection<DiagramElementMapping> targetMappingAndTheirMappingImports = getAbstractNodeMappingImports(diagramMappingsManager, bestEdgeMapping.getTargetMapping());
@@ -266,7 +266,7 @@ public class CreateViewTask extends AbstractOperationTask {
                             edgeMapping = (EdgeMapping) createEdgeView.getMapping();
                         }
                         DEdgeCandidate dEdgeCandidate = new DEdgeCandidate(edgeMapping, context.getCurrentTarget(), sourceEdgeTarget, targetEdgeTarget);
-                        DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
+                        MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
                         createdDEdge = dDiagramElementSynchronizer.createNewEdge(mappingManager, dEdgeCandidate, mappingsToEdgeTargets, edgeToMappingBasedDecoration, edgeToSemanticBasedDecoration);
                         if (needsPathUpdate) {
                             dDiagramElementSynchronizer.updatePath(createdDEdge, edgeMapping, mappingsToEdgeTargets);
@@ -279,7 +279,7 @@ public class CreateViewTask extends AbstractOperationTask {
 
     }
 
-    private Collection<DiagramElementMapping> getAbstractNodeMappingImports(DiagramMappingsManager diagramMappingsManager, Collection<DiagramElementMapping> mappings) {
+    private Collection<DiagramElementMapping> getAbstractNodeMappingImports(MappingsFromLayersComputationResult diagramMappingsManager, Collection<DiagramElementMapping> mappings) {
         Collection<DiagramElementMapping> mappingImports = new ArrayList<DiagramElementMapping>();
         for (DiagramElementMapping mapping : mappings) {
             Collection<DiagramElementMapping> allAbstractNodeMappings = new ArrayList<DiagramElementMapping>(diagramMappingsManager.getNodeMappings());

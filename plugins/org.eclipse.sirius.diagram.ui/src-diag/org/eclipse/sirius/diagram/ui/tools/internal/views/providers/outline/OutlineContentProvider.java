@@ -34,8 +34,8 @@ import org.eclipse.sirius.diagram.DDiagramElementContainer;
 import org.eclipse.sirius.diagram.DEdge;
 import org.eclipse.sirius.diagram.DNode;
 import org.eclipse.sirius.diagram.DSemanticDiagram;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.query.DDiagramElementQuery;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.LayerHelper;
 import org.eclipse.sirius.diagram.provider.DiagramItemProviderAdapterFactory;
@@ -86,7 +86,7 @@ public class OutlineContentProvider implements ITreeContentProvider, DiagramOutl
 
     private List<Object> clearFilteredElements(final List<? extends Object> elements, final DDiagram vp) {
         Session session = SessionManager.INSTANCE.getSession(((DSemanticDiagram) vp).getTarget());
-        DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, vp);
+        MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, vp);
         final List<Object> result = new ArrayList<Object>(elements.size());
         final Iterator<? extends Object> it = elements.iterator();
         while (it.hasNext()) {
@@ -112,7 +112,7 @@ public class OutlineContentProvider implements ITreeContentProvider, DiagramOutl
      * @param dde
      *            The diagram element to check.
      */
-    private boolean isFiltered(DiagramMappingsManager session, DDiagramElement dde) {
+    private boolean isFiltered(MappingsFromLayersComputationResult session, DDiagramElement dde) {
         boolean isFiltered = true;
         if (dde.isVisible()) {
             isFiltered = false;

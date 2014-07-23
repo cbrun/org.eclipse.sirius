@@ -24,8 +24,8 @@ import org.eclipse.sirius.diagram.DNodeList;
 import org.eclipse.sirius.diagram.DSemanticDiagram;
 import org.eclipse.sirius.diagram.DragAndDropTarget;
 import org.eclipse.sirius.diagram.EdgeTarget;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.query.AbstractNodeMappingQuery;
 import org.eclipse.sirius.diagram.business.api.query.DiagramElementMappingQuery;
 import org.eclipse.sirius.diagram.business.api.query.EObjectQuery;
@@ -150,7 +150,7 @@ public class BestMappingGetter {
         List<ContainerMapping> allContainerMappingsHierarchy = new ArrayList<ContainerMapping>();
         Collection<ContainerMapping> mappingCandidates = new ArrayList<ContainerMapping>();
         // Get potential ContainerMapping children of the containerView
-        DiagramMappingsManager diagramMappingsManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
+        MappingsFromLayersComputationResult diagramMappingsManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
         if (containerView instanceof DDiagramElement) {
             DDiagramElement containerViewDDiagramElt = (DDiagramElement) containerView;
             if (containerViewDDiagramElt instanceof DNodeContainer) {
@@ -220,7 +220,7 @@ public class BestMappingGetter {
         List<NodeMapping> allNodeMappingsHierarchy = new ArrayList<NodeMapping>();
         Collection<NodeMapping> mappingCandidates = new ArrayList<NodeMapping>();
         // Get potential NodeMapping children of the containerView
-        DiagramMappingsManager diagramMappingsManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
+        MappingsFromLayersComputationResult diagramMappingsManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
         if (containerView instanceof DDiagramElement) {
             DDiagramElement containerViewDDiagramElt = (DDiagramElement) containerView;
             if (containerViewDDiagramElt instanceof DNodeContainer) {
@@ -294,7 +294,7 @@ public class BestMappingGetter {
      */
     public List<EdgeMapping> getAllEdgeMappingsHierarchy(Collection<EdgeMapping> proposedEdgeMappings) {
         List<EdgeMapping> allEdgeMappingsHierarchy = new ArrayList<EdgeMapping>();
-        DiagramMappingsManager diagramMappingsManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
+        MappingsFromLayersComputationResult diagramMappingsManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, parentDDiagram);
         // Keep only EdgeMapping which are in the import hierarchy of a
         // EdgeMapping in the proposedNodeMappings collection
         for (EdgeMapping potentialEdgeMapping : diagramMappingsManager.getEdgeMappings()) {

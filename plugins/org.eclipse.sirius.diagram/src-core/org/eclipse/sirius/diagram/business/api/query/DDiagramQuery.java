@@ -19,8 +19,8 @@ import org.eclipse.sirius.business.api.session.SessionManager;
 import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DDiagramElement;
 import org.eclipse.sirius.diagram.DSemanticDiagram;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.LayerHelper;
 import org.eclipse.sirius.diagram.business.internal.query.DDiagramInternalQuery;
 
@@ -93,7 +93,7 @@ public class DDiagramQuery extends DRepresentationQuery {
      */
     public boolean isHidden(Session session, DDiagramElement dDiagramElement) {
         DDiagramElementQuery query = new DDiagramElementQuery(dDiagramElement);
-        DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, dDiagram);
+        MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, dDiagram);
         return query.isHidden() && LayerHelper.isInActivatedLayer(mappingManager, dDiagramElement) && !query.isFiltered();
     }
 
@@ -109,7 +109,7 @@ public class DDiagramQuery extends DRepresentationQuery {
      */
     public boolean isLabelHidden(Session session, DDiagramElement dDiagramElement) {
         DDiagramElementQuery query = new DDiagramElementQuery(dDiagramElement);
-        DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, dDiagram);
+        MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, dDiagram);
         return query.isLabelHidden() && LayerHelper.isInActivatedLayer(mappingManager, dDiagramElement) && !query.isFiltered();
     }
 

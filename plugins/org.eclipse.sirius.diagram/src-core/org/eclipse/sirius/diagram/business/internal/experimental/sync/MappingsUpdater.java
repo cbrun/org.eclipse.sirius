@@ -20,7 +20,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DDiagramElement;
 import org.eclipse.sirius.diagram.DragAndDropTarget;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
 import org.eclipse.sirius.diagram.business.api.query.DiagramElementMappingQuery;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.LayerHelper;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.MappingsListVisitor;
@@ -42,7 +42,7 @@ public class MappingsUpdater {
 
     private DDiagram diagram;
 
-    private DiagramMappingsManager mappingsManager;
+    private MappingsFromLayersComputationResult mappingsManager;
 
     private DDiagramSynchronizer synchronizer;
 
@@ -56,7 +56,7 @@ public class MappingsUpdater {
      * @param synchronizer
      *            .
      */
-    public MappingsUpdater(final DDiagram diagram, final DiagramMappingsManager mappingsManager, final DDiagramSynchronizer synchronizer) {
+    public MappingsUpdater(final DDiagram diagram, final MappingsFromLayersComputationResult mappingsManager, final DDiagramSynchronizer synchronizer) {
         this.diagram = diagram;
         this.mappingsManager = mappingsManager;
         this.synchronizer = synchronizer;

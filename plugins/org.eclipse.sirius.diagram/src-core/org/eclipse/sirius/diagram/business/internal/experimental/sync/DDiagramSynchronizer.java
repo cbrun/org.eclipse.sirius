@@ -53,8 +53,8 @@ import org.eclipse.sirius.diagram.DiagramFactory;
 import org.eclipse.sirius.diagram.DiagramPackage;
 import org.eclipse.sirius.diagram.DragAndDropTarget;
 import org.eclipse.sirius.diagram.EdgeTarget;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.helper.SiriusDiagramHelper;
 import org.eclipse.sirius.diagram.business.api.helper.concern.ConcernService;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayServiceManager;
@@ -146,7 +146,7 @@ public class DDiagramSynchronizer {
 
     private DNodeSynchronizerHelper nodHelper;
 
-    private DiagramMappingsManager diagramMappingsManager;
+    private MappingsFromLayersComputationResult diagramMappingsManager;
 
     private SetMultimap<EObjectCouple, DDiagramElement> previousCandidatesCache;
 
@@ -262,7 +262,11 @@ public class DDiagramSynchronizer {
     private void initDiagramRelatedFields() {
         this.edgeHelper = new DEdgeSynchronizerHelper(this, diagram, accessor);
         this.nodHelper = new DNodeSynchronizerHelper(this, diagram, accessor);
-        this.diagramMappingsManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, diagram);
+        initRefreshRelatedFields();
+    }
+
+    protected void initRefreshRelatedFields() {
+        this.diagramMappingsManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, diagram);
         this.mappingsUpdater = new MappingsUpdater(diagram, diagramMappingsManager, this);
     }
 
@@ -337,6 +341,7 @@ public class DDiagramSynchronizer {
      */
     public void refresh(final IProgressMonitor monitor) {
         DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.REFRESH_DIAGRAM_KEY);
+        initRefreshRelatedFields();
         refreshOperation(monitor);
         DslCommonPlugin.PROFILER.stopWork(SiriusTasksKey.REFRESH_DIAGRAM_KEY);
     }
@@ -564,7 +569,7 @@ public class DDiagramSynchronizer {
 
     private void deleteIgnoredElementsAndDuplicates() {
         DisplayServiceManager.INSTANCE.getDisplayService().activateCache();
-        DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, this.diagram);
+        MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, this.diagram);
         NotificationUtil.sendNotification(this.diagram, Notification.Kind.START, Notification.VISIBILITY);
 
         for (final EObjectCouple ignoredElement : this.ignoredDuringRefreshProcess) {
@@ -597,7 +602,7 @@ public class DDiagramSynchronizer {
         }
     }
 
-    private boolean shouldKeepElement(DiagramMappingsManager mappingManager, final DDiagramElement element) {
+    private boolean shouldKeepElement(MappingsFromLayersComputationResult mappingManager, final DDiagramElement element) {
         return element.getParentDiagram() != null && !DisplayServiceManager.INSTANCE.getDisplayService().computeVisibility(mappingManager, this.diagram, element);
     }
 
@@ -1253,7 +1258,7 @@ public class DDiagramSynchronizer {
      *            semantic based decorations
      * @return an Option on DEdge
      */
-    public Option<DEdge> createEdgeMapping(DiagramMappingsManager mappingManager, final Map<DiagramElementMapping, Collection<EdgeTarget>> mappingsToEdgeTargets, final EdgeMapping mapping,
+    public Option<DEdge> createEdgeMapping(MappingsFromLayersComputationResult mappingManager, final Map<DiagramElementMapping, Collection<EdgeTarget>> mappingsToEdgeTargets, final EdgeMapping mapping,
             final Map<EdgeMapping, Collection<MappingBasedDecoration>> edgeToMappingBasedDecoration, final Map<String, Collection<SemanticBasedDecoration>> edgeToSemanticBasedDecoration) {
 
         edgesDones = new HashSet<DDiagramElement>();
@@ -1265,7 +1270,7 @@ public class DDiagramSynchronizer {
         return Options.newNone();
     }
 
-    private Collection<DEdge> createDEdgeOnMapping(DiagramMappingsManager mappingManager, final Map<DiagramElementMapping, Collection<EdgeTarget>> mappingsToEdgeTargets, final EdgeMapping mapping,
+    private Collection<DEdge> createDEdgeOnMapping(MappingsFromLayersComputationResult mappingManager, final Map<DiagramElementMapping, Collection<EdgeTarget>> mappingsToEdgeTargets, final EdgeMapping mapping,
             final Map<EdgeMapping, Collection<MappingBasedDecoration>> edgeToMappingBasedDecoration, final Map<String, Collection<SemanticBasedDecoration>> edgeToSemanticBasedDecoration) {
         Collection<DEdge> newEdges = new HashSet<DEdge>();
         if (this.accessor.getPermissionAuthority().canEditInstance(this.diagram)) {
@@ -1278,7 +1283,7 @@ public class DDiagramSynchronizer {
         return newEdges;
     }
 
-    private void refreshEdgeMapping(DiagramMappingsManager mappingManager, final Map<DiagramElementMapping, Collection<EdgeTarget>> mappingsToEdgeTargets, final EdgeMapping mapping,
+    private void refreshEdgeMapping(MappingsFromLayersComputationResult mappingManager, final Map<DiagramElementMapping, Collection<EdgeTarget>> mappingsToEdgeTargets, final EdgeMapping mapping,
             final Map<EdgeMapping, Collection<MappingBasedDecoration>> edgeToMappingBasedDecoration, final Map<String, Collection<SemanticBasedDecoration>> edgeToSemanticBasedDecoration,
             IProgressMonitor monitor) {
         if (this.accessor.getPermissionAuthority().canEditInstance(this.diagram)) {

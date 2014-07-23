@@ -62,8 +62,8 @@ import org.eclipse.sirius.diagram.DNodeContainer;
 import org.eclipse.sirius.diagram.DiagramPackage;
 import org.eclipse.sirius.diagram.DragAndDropTarget;
 import org.eclipse.sirius.diagram.EdgeTarget;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationCache;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayServiceManager;
 import org.eclipse.sirius.diagram.business.api.query.DiagramDescriptionMappingManagerQuery;
 import org.eclipse.sirius.diagram.business.internal.metamodel.operations.DDiagramElementContainerSpecOperations;
@@ -656,7 +656,7 @@ public class SiriusDiagramTestCase extends SiriusTestCase {
      */
     protected final NodeMapping getNodeMapping(final Layer layer, final String mappingName) {
 
-        final DiagramDescriptionMappingsManager mappingsManager = DiagramDescriptionMappingsRegistry.INSTANCE.getDiagramDescriptionMappingsManager(session,
+        final MappingsFromViewpointsComputationResult mappingsManager = MappingsFromViewpointsComputationCache.INSTANCE.getDiagramDescriptionMappingsManager(session,
                 SiriusDiagramTestCase.getParentDiagramDescription(layer));
         computeMapping(mappingsManager);
 
@@ -671,7 +671,7 @@ public class SiriusDiagramTestCase extends SiriusTestCase {
         throw new IllegalArgumentException(SiriusDiagramTestCase.MAPPING_NAME_INCORRECT);
     }
 
-    private void computeMapping(final DiagramDescriptionMappingsManager mappingsManager) {
+    private void computeMapping(final MappingsFromViewpointsComputationResult mappingsManager) {
         if (session != null) {
             mappingsManager.computeMappings(session.getSelectedViewpoints(false));
         } else {
@@ -691,7 +691,7 @@ public class SiriusDiagramTestCase extends SiriusTestCase {
      *         {@link IllegalArgumentException} if it cannot be found.
      */
     protected final EdgeMapping getEdgeMapping(final Layer layer, final String mappingName) {
-        final DiagramDescriptionMappingsManager mappingsManager = DiagramDescriptionMappingsRegistry.INSTANCE.getDiagramDescriptionMappingsManager(session,
+        final MappingsFromViewpointsComputationResult mappingsManager = MappingsFromViewpointsComputationCache.INSTANCE.getDiagramDescriptionMappingsManager(session,
                 SiriusDiagramTestCase.getParentDiagramDescription(layer));
         for (final EdgeMapping edgeMapping : mappingsManager.getEdgeMappings()) {
             if (mappingName.equals(edgeMapping.getName())) {
@@ -714,7 +714,7 @@ public class SiriusDiagramTestCase extends SiriusTestCase {
      */
     protected final ContainerMapping getContainerMapping(final Layer layer, final String mappingName) {
 
-        final DiagramDescriptionMappingsManager mappingsManager = DiagramDescriptionMappingsRegistry.INSTANCE.getDiagramDescriptionMappingsManager(session,
+        final MappingsFromViewpointsComputationResult mappingsManager = MappingsFromViewpointsComputationCache.INSTANCE.getDiagramDescriptionMappingsManager(session,
                 SiriusDiagramTestCase.getParentDiagramDescription(layer));
         computeMapping(mappingsManager);
 

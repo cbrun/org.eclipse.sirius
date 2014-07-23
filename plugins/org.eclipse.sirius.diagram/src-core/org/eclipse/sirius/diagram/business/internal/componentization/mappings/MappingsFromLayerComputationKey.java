@@ -15,13 +15,13 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
-public class DiagramMappingsManagerKey {
+public class MappingsFromLayerComputationKey {
 
     private DiagramDescription description;
 
     private List<Layer> activatedLayers;
 
-    public DiagramMappingsManagerKey(DiagramDescription description, Collection<Layer> activatedLayers) {
+    public MappingsFromLayerComputationKey(DiagramDescription description, Collection<Layer> activatedLayers) {
         this.description = description;
         this.activatedLayers = Ordering.natural().onResultOf(new Function<Layer, String>() {
 
@@ -32,8 +32,8 @@ public class DiagramMappingsManagerKey {
         }).sortedCopy(activatedLayers);
     }
 
-    public static DiagramMappingsManagerKey fromDiagram(DDiagram diagram) {
-        return new DiagramMappingsManagerKey(diagram.getDescription(), diagram.getActivatedLayers());
+    public static MappingsFromLayerComputationKey fromDiagram(DDiagram diagram) {
+        return new MappingsFromLayerComputationKey(diagram.getDescription(), diagram.getActivatedLayers());
     }
 
     @Override
@@ -53,7 +53,7 @@ public class DiagramMappingsManagerKey {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        DiagramMappingsManagerKey other = (DiagramMappingsManagerKey) obj;
+        MappingsFromLayerComputationKey other = (MappingsFromLayerComputationKey) obj;
         if (description == null) {
             if (other.description != null)
                 return false;

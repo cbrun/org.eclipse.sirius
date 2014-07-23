@@ -14,20 +14,20 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult;
 import org.eclipse.sirius.diagram.business.internal.componentization.mappings.visitor.MappingsHierarchyVisitor;
 import org.eclipse.sirius.diagram.description.DiagramElementMapping;
 
 /**
  * A class aggregating all the queries (read-only!) having a
- * {@link DiagramDescriptionMappingsManager} as a starting point.
+ * {@link MappingsFromViewpointsComputationResult} as a starting point.
  * 
  * @author mporhel
  * 
  */
 public class DiagramDescriptionMappingManagerQuery {
 
-    private DiagramDescriptionMappingsManager manager;
+    private MappingsFromViewpointsComputationResult manager;
 
     /**
      * Create a new query.
@@ -35,7 +35,7 @@ public class DiagramDescriptionMappingManagerQuery {
      * @param manager
      *            the element to query.
      */
-    public DiagramDescriptionMappingManagerQuery(DiagramDescriptionMappingsManager manager) {
+    public DiagramDescriptionMappingManagerQuery(MappingsFromViewpointsComputationResult manager) {
         this.manager = manager;
     }
 

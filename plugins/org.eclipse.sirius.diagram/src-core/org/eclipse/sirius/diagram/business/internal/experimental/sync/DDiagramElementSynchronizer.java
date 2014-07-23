@@ -46,8 +46,8 @@ import org.eclipse.sirius.diagram.EdgeStyle;
 import org.eclipse.sirius.diagram.EdgeTarget;
 import org.eclipse.sirius.diagram.NodeStyle;
 import org.eclipse.sirius.diagram.WorkspaceImage;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
 import org.eclipse.sirius.diagram.business.api.helper.SiriusDiagramHelper;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayMode;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayService;
@@ -56,7 +56,7 @@ import org.eclipse.sirius.diagram.business.api.helper.graphicalfilters.HideFilte
 import org.eclipse.sirius.diagram.business.api.query.ContainerMappingQuery;
 import org.eclipse.sirius.diagram.business.api.query.DiagramDescriptionMappingManagerQuery;
 import org.eclipse.sirius.diagram.business.api.query.IEdgeMappingQuery;
-import org.eclipse.sirius.diagram.business.internal.componentization.mappings.DiagramDescriptionMappingsManagerImpl;
+import org.eclipse.sirius.diagram.business.internal.componentization.mappings.MappingsFromViewpointComputationResultImpl;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.DiagramElementMappingHelper;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.LayerHelper;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.MappingHelper;
@@ -146,7 +146,7 @@ public class DDiagramElementSynchronizer {
      *            true if the element is a border one.
      * @return newly created node.
      */
-    public AbstractDNode createNewNode(DiagramMappingsManager mappingManager, final AbstractDNodeCandidate candidate, final boolean isBorder) {
+    public AbstractDNode createNewNode(MappingsFromLayersComputationResult mappingManager, final AbstractDNodeCandidate candidate, final boolean isBorder) {
         return createNewNode(mappingManager, candidate, isBorder, -1);
     }
 
@@ -165,7 +165,7 @@ public class DDiagramElementSynchronizer {
      *            the insertion index. give a negative value if you don't care
      * @return newly created node.
      */
-    public AbstractDNode createNewNode(DiagramMappingsManager mappingManager, final AbstractDNodeCandidate candidate, final boolean isBorder, final int insertionIndex) {
+    public AbstractDNode createNewNode(MappingsFromLayersComputationResult mappingManager, final AbstractDNodeCandidate candidate, final boolean isBorder, final int insertionIndex) {
         final DragAndDropTarget container = candidate.getViewContainer();
         final AbstractDNode newNode = createAbstractNode(container, candidate, isBorder);
         if (insertionIndex > 0) {
@@ -247,7 +247,7 @@ public class DDiagramElementSynchronizer {
 
         final DiagramDescription description = diagram.getDescription();
 
-        final DiagramDescriptionMappingsManager mappingsManager = new DiagramDescriptionMappingsManagerImpl(description);
+        final MappingsFromViewpointsComputationResult mappingsManager = new MappingsFromViewpointComputationResultImpl(description);
         mappingsManager.computeMappings(enabledVp);
         final Set<DiagramElementMapping> allMappings = new DiagramDescriptionMappingManagerQuery(mappingsManager).computeAllMappings();
         final Iterable<NodeMapping> allNodeMappings = Iterables.filter(allMappings, NodeMapping.class);
@@ -301,7 +301,7 @@ public class DDiagramElementSynchronizer {
      *            associated decorations
      * @return the created edge
      */
-    public DEdge createNewEdge(DiagramMappingsManager mappingManager, final DEdgeCandidate candidate, final Map<DiagramElementMapping, Collection<EdgeTarget>> mappingsToEdgeTargets,
+    public DEdge createNewEdge(MappingsFromLayersComputationResult mappingManager, final DEdgeCandidate candidate, final Map<DiagramElementMapping, Collection<EdgeTarget>> mappingsToEdgeTargets,
             final Map<EdgeMapping, Collection<MappingBasedDecoration>> edgeToMappingBasedDecoration, final Map<String, Collection<SemanticBasedDecoration>> edgeToSemanticBasedDecoration) {
 
         DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.CREATE_MISSING_EDGES_KEY);
@@ -340,7 +340,7 @@ public class DDiagramElementSynchronizer {
         return newEdge;
     }
 
-    private void computeVisibilityOnCreation(DiagramMappingsManager mappingManager, final DDiagramElement element) {
+    private void computeVisibilityOnCreation(MappingsFromLayersComputationResult mappingManager, final DDiagramElement element) {
         final DisplayService service = DisplayServiceManager.INSTANCE.getDisplayService(DisplayMode.CREATION);
         if (service == null) {
             return;

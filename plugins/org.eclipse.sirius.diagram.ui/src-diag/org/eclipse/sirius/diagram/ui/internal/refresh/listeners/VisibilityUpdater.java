@@ -36,8 +36,8 @@ import org.eclipse.sirius.diagram.DSemanticDiagram;
 import org.eclipse.sirius.diagram.DiagramPackage;
 import org.eclipse.sirius.diagram.DiagramPlugin;
 import org.eclipse.sirius.diagram.GraphicalFilter;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayServiceManager;
 import org.eclipse.sirius.diagram.ui.tools.api.properties.PropertiesService;
 import org.eclipse.sirius.tools.api.profiler.SiriusTasksKey;
@@ -180,7 +180,7 @@ public class VisibilityUpdater extends ResourceSetListenerImpl {
 
             Session session = SessionManager.INSTANCE.getSession(((DSemanticDiagram) diagram).getTarget());
             DisplayServiceManager.INSTANCE.getDisplayService().activateCache();
-            DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, diagram);
+            MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, diagram);
 
             for (DDiagramElement element : elementsToRefresh) {
                 element.setVisible(DisplayServiceManager.INSTANCE.getDisplayService().computeVisibility(mappingManager, diagram, element));

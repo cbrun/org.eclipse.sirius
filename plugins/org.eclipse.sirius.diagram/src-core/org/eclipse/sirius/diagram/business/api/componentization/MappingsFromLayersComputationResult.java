@@ -34,7 +34,7 @@ import org.eclipse.sirius.viewpoint.description.Viewpoint;
  * @author mchauvin
  * @since 0.9.0
  */
-public interface DiagramMappingsManager {
+public interface MappingsFromLayersComputationResult {
 
 
     /**

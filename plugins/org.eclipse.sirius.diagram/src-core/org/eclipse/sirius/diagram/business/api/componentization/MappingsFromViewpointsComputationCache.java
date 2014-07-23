@@ -11,7 +11,7 @@
 package org.eclipse.sirius.diagram.business.api.componentization;
 
 import org.eclipse.sirius.business.api.session.Session;
-import org.eclipse.sirius.diagram.business.internal.componentization.mappings.DiagramDescriptionMappingsRegistryImpl;
+import org.eclipse.sirius.diagram.business.internal.componentization.mappings.MappingsFromViewpointComputationCacheImpl;
 import org.eclipse.sirius.diagram.description.DiagramDescription;
 
 /**
@@ -20,10 +20,10 @@ import org.eclipse.sirius.diagram.description.DiagramDescription;
  * @author mchauvin
  * @since 0.9.0
  */
-public interface DiagramDescriptionMappingsRegistry {
+public interface MappingsFromViewpointsComputationCache {
 
     /** The shared instance. */
-    DiagramDescriptionMappingsRegistry INSTANCE = DiagramDescriptionMappingsRegistryImpl.init();
+    MappingsFromViewpointsComputationCache INSTANCE = MappingsFromViewpointComputationCacheImpl.init();
 
     /**
      * Get the mappings manager for this session and this diagram description.
@@ -34,11 +34,11 @@ public interface DiagramDescriptionMappingsRegistry {
      *            the diagram description
      * @return the associated mappings manager
      */
-    DiagramDescriptionMappingsManager getDiagramDescriptionMappingsManager(final Session session, final DiagramDescription description);
+    MappingsFromViewpointsComputationResult getDiagramDescriptionMappingsManager(final Session session, final DiagramDescription description);
 
     /**
      * Compute the available mappings for all
-     * {@link DiagramDescriptionMappingsManager}.
+     * {@link MappingsFromViewpointsComputationResult}.
      */
-    void computeMappings();
+    void clearchCache();
 }

@@ -27,7 +27,7 @@ import org.eclipse.sirius.viewpoint.description.Viewpoint;
  * @author mchauvin
  * @since 0.9.0
  */
-public interface DiagramDescriptionMappingsManager {
+public interface MappingsFromViewpointsComputationResult {
 
     /**
      * Add a listener.

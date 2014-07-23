@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.sirius.common.tools.api.util.EqualityHelper;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult;
 import org.eclipse.sirius.diagram.business.api.query.DiagramDescriptionMappingManagerQuery;
 import org.eclipse.sirius.diagram.business.api.query.IEdgeMappingQuery;
 import org.eclipse.sirius.diagram.description.AbstractNodeMapping;
@@ -56,7 +56,7 @@ public class CandidateMappingManager {
 
     private Predicate<CandidateMapping> edgeMappingPredicate;
 
-    private DiagramDescriptionMappingsManager mappingsManager;
+    private MappingsFromViewpointsComputationResult mappingsManager;
 
     /**
      * Construct a new instance.
@@ -64,7 +64,7 @@ public class CandidateMappingManager {
      * @param mappingsManager
      *            .
      */
-    public CandidateMappingManager(final DiagramDescriptionMappingsManager mappingsManager) {
+    public CandidateMappingManager(final MappingsFromViewpointsComputationResult mappingsManager) {
 
         nodeMappingPredicate = new Predicate<CandidateMapping>() {
             public boolean apply(final CandidateMapping input) {

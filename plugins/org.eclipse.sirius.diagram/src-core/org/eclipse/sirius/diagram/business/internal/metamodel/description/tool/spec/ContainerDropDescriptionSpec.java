@@ -33,8 +33,8 @@ import org.eclipse.sirius.diagram.DNode;
 import org.eclipse.sirius.diagram.DSemanticDiagram;
 import org.eclipse.sirius.diagram.DragAndDropTarget;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramComponentizationManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.LayerHelper;
 import org.eclipse.sirius.diagram.description.AbstractNodeMapping;
 import org.eclipse.sirius.diagram.description.ContainerMapping;
@@ -112,7 +112,7 @@ public class ContainerDropDescriptionSpec extends ContainerDropDescriptionImpl {
                 if (extendedPackage.eInstanceOf(droppedElement, domainClass)) {
                     final DDiagram diagram = ContainerDropDescriptionSpec.getDiagram(targetContainer);
                     if (diagram != null) {
-                        DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, diagram);
+                        MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, diagram);
                         if (LayerHelper.isInActivatedLayer(mappingManager, diagram, currentMapping)) {
                             bestMapping = currentMapping;
                             break;

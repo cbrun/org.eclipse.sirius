@@ -31,8 +31,8 @@ import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DDiagramElement;
 import org.eclipse.sirius.diagram.DNode;
 import org.eclipse.sirius.diagram.DNodeContainer;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayMode;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayService;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayServiceManager;
@@ -232,7 +232,7 @@ public final class AbstractNodeMappingSpecOperations {
     public static void setInitialVisibility(final DDiagramElement diagramElement, DDiagram diagram, Session session) {
         final DisplayService service = DisplayServiceManager.INSTANCE.getDisplayService(DisplayMode.CREATION);
         if (service != null && diagramElement != null && diagram != null) {
-            DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, diagram);
+            MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, diagram);
             diagramElement.setVisible(service.computeVisibility(mappingManager, diagram, diagramElement));
             if (!service.computeLabelVisibility(diagram, diagramElement)) {
                 HideFilterHelper.INSTANCE.hideLabel(diagramElement);

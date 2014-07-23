@@ -12,7 +12,7 @@ package org.eclipse.sirius.diagram.business.api.helper.display;
 
 import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DDiagramElement;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
 
 /**
  * .
@@ -53,7 +53,7 @@ public interface DisplayService {
      *            the element
      * @return true if the element is visible, false otherwise
      */
-    boolean computeVisibility(DiagramMappingsManager session, final DDiagram diagram, final DDiagramElement element);
+    boolean computeVisibility(MappingsFromLayersComputationResult session, final DDiagram diagram, final DDiagramElement element);
 
     /**
      * Check if the label of this element has to be displayed in the diagram

@@ -41,7 +41,7 @@ import org.eclipse.sirius.diagram.DDiagramElement;
 import org.eclipse.sirius.diagram.DEdge;
 import org.eclipse.sirius.diagram.DSemanticDiagram;
 import org.eclipse.sirius.diagram.NodeStyle;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationCache;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayMode;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayServiceManager;
 import org.eclipse.sirius.diagram.business.api.query.DiagramDescriptionQuery;
@@ -467,7 +467,7 @@ public class DiagramDialectServices extends AbstractRepresentationDialectService
      */
     @Override
     public void invalidateMappingCache() {
-        DiagramDescriptionMappingsRegistry.INSTANCE.computeMappings();
+        MappingsFromViewpointsComputationCache.INSTANCE.clearchCache();
     }
 
     /**

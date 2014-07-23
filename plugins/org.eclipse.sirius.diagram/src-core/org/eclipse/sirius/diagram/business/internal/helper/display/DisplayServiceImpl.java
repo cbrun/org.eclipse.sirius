@@ -25,8 +25,8 @@ import org.eclipse.sirius.diagram.DEdge;
 import org.eclipse.sirius.diagram.DSemanticDiagram;
 import org.eclipse.sirius.diagram.DiagramPackage;
 import org.eclipse.sirius.diagram.GraphicalFilter;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManagerRegistry;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayService;
 import org.eclipse.sirius.diagram.business.api.query.DDiagramElementQuery;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.LayerHelper;
@@ -70,7 +70,7 @@ public final class DisplayServiceImpl implements DisplayService {
         activateCache();
 
         Session session = SessionManager.INSTANCE.getSession(((DSemanticDiagram) diagram).getTarget());
-        DiagramMappingsManager mappingManager = DiagramMappingsManagerRegistry.INSTANCE.getDiagramMappingsManager(session, diagram);
+        MappingsFromLayersComputationResult mappingManager = MappingsFromLayersComputationCache.INSTANCE.getDiagramMappingsManager(session, diagram);
 
         NotificationUtil.sendNotification(diagram, Notification.Kind.START, Notification.REFRESH_VISIBILITY_ON_DIAGRAM);
         DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.IS_VISIBLE_KEY);
@@ -135,10 +135,10 @@ public final class DisplayServiceImpl implements DisplayService {
     /**
      * {@inheritDoc}
      * 
-     * @see org.eclipse.sirius.diagram.business.api.helper.display.DisplayService#computeVisibility(DiagramMappingsManager,
+     * @see org.eclipse.sirius.diagram.business.api.helper.display.DisplayService#computeVisibility(MappingsFromLayersComputationResult,
      *      DDiagram, DDiagramElement)
      */
-    public boolean computeVisibility(DiagramMappingsManager session, final DDiagram diagram, final DDiagramElement element) {
+    public boolean computeVisibility(MappingsFromLayersComputationResult session, final DDiagram diagram, final DDiagramElement element) {
         DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.REFRESH_VISIBILITY_KEY);
         final boolean result = doIsVisible(session, diagram, element);
         DslCommonPlugin.PROFILER.stopWork(SiriusTasksKey.REFRESH_VISIBILITY_KEY);
@@ -159,14 +159,14 @@ public final class DisplayServiceImpl implements DisplayService {
      * Tell whether an element is displayed or not in a {@link DDiagram}.
      * 
      * @param diagramMappingsManager
-     *            the {@link DiagramMappingsManager} to use
+     *            the {@link MappingsFromLayersComputationResult} to use
      * @param diagram
      *            the diagram.
      * @param element
      *            an element.
      * @return true if the element is in the viewpoint, false otherwise.
      */
-    private boolean doIsVisible(DiagramMappingsManager diagramMappingsManager, final DDiagram diagram, final DDiagramElement element) {
+    private boolean doIsVisible(MappingsFromLayersComputationResult diagramMappingsManager, final DDiagram diagram, final DDiagramElement element) {
 
         boolean isVisible = true;
         final Boolean cachedValue = getFromCache(element);
@@ -199,7 +199,7 @@ public final class DisplayServiceImpl implements DisplayService {
         return isVisible;
     }
 
-    private boolean isDEdgeVisible(DiagramMappingsManager diagramMappingsManager, final DDiagram vp, final DEdge edge) {
+    private boolean isDEdgeVisible(MappingsFromLayersComputationResult diagramMappingsManager, final DDiagram vp, final DEdge edge) {
         boolean isVisible = true;
         if (edge.getSourceNode() instanceof DDiagramElement) {
             isVisible = computeVisibility(diagramMappingsManager, vp, (DDiagramElement) edge.getSourceNode());

@@ -17,7 +17,7 @@ import org.eclipse.sirius.common.tools.DslCommonPlugin;
 import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DDiagramElement;
 import org.eclipse.sirius.diagram.DEdge;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayService;
 import org.eclipse.sirius.diagram.business.api.query.DDiagramElementQuery;
 import org.eclipse.sirius.diagram.business.internal.metamodel.helper.LayerHelper;
@@ -94,10 +94,10 @@ public final class CreationDisplayServiceImpl implements DisplayService {
     /**
      * {@inheritDoc}
      * 
-     * @see org.eclipse.sirius.diagram.business.api.helper.display.DisplayService#computeVisibility(DiagramMappingsManager,
+     * @see org.eclipse.sirius.diagram.business.api.helper.display.DisplayService#computeVisibility(MappingsFromLayersComputationResult,
      *      DDiagram, DDiagramElement)
      */
-    public boolean computeVisibility(DiagramMappingsManager session, final DDiagram diagram, final DDiagramElement element) {
+    public boolean computeVisibility(MappingsFromLayersComputationResult session, final DDiagram diagram, final DDiagramElement element) {
         DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.IS_VISIBLE_KEY);
         final boolean result = doIsVisible(session, diagram, element);
         DslCommonPlugin.PROFILER.stopWork(SiriusTasksKey.IS_VISIBLE_KEY);
@@ -128,7 +128,7 @@ public final class CreationDisplayServiceImpl implements DisplayService {
      *            an element.
      * @return true if the element is in the viewpoint, false otherwise.
      */
-    private boolean doIsVisible(DiagramMappingsManager session, final DDiagram diagram, final DDiagramElement element) {
+    private boolean doIsVisible(MappingsFromLayersComputationResult session, final DDiagram diagram, final DDiagramElement element) {
         boolean isVisible = true;
 
         DDiagramElementQuery ddeQuery = new DDiagramElementQuery(element);

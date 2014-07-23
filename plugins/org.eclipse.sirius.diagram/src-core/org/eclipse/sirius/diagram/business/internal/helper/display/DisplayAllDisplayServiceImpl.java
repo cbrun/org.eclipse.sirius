@@ -12,7 +12,7 @@ package org.eclipse.sirius.diagram.business.internal.helper.display;
 
 import org.eclipse.sirius.diagram.DDiagram;
 import org.eclipse.sirius.diagram.DDiagramElement;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
 import org.eclipse.sirius.diagram.business.api.helper.display.DisplayService;
 
 /**
@@ -69,10 +69,10 @@ public final class DisplayAllDisplayServiceImpl implements DisplayService {
     /**
      * {@inheritDoc}
      * 
-     * @see org.eclipse.sirius.diagram.business.api.helper.display.DisplayService#computeVisibility(DiagramMappingsManager,
+     * @see org.eclipse.sirius.diagram.business.api.helper.display.DisplayService#computeVisibility(MappingsFromLayersComputationResult,
      *      DDiagram, DDiagramElement)
      */
-    public boolean computeVisibility(DiagramMappingsManager session, final DDiagram diagram, final DDiagramElement element) {
+    public boolean computeVisibility(MappingsFromLayersComputationResult session, final DDiagram diagram, final DDiagramElement element) {
         return true;
     }
 

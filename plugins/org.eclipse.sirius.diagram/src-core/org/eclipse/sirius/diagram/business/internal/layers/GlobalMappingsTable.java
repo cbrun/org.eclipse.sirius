@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManager;
+import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult;
 import org.eclipse.sirius.diagram.business.internal.componentization.mappings.table.CandidateMappingManager;
 import org.eclipse.sirius.diagram.description.ContainerMapping;
 import org.eclipse.sirius.diagram.description.DiagramElementMapping;
@@ -30,7 +30,7 @@ import org.eclipse.sirius.diagram.description.NodeMapping;
  */
 public class GlobalMappingsTable {
 
-    private final DiagramDescriptionMappingsManager descriptionMappings;
+    private final MappingsFromViewpointsComputationResult descriptionMappings;
 
     private MappingsTable<NodeMapping> nodeMappingsTable;
 
@@ -47,7 +47,7 @@ public class GlobalMappingsTable {
      *            the description mappings from which to get the available
      *            mappings depending on the activated viewpoints
      */
-    public GlobalMappingsTable(final DiagramDescriptionMappingsManager descriptionMappings) {
+    public GlobalMappingsTable(final MappingsFromViewpointsComputationResult descriptionMappings) {
         this.descriptionMappings = descriptionMappings;
 
         nodeMappingsTable = new MappingsTable<NodeMapping>();

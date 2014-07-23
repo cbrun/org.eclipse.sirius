@@ -16,7 +16,7 @@ import org.eclipse.sirius.diagram.description.Layer;
 import org.eclipse.sirius.viewpoint.description.Viewpoint;
 
 /**
- * A listener to know {@link DiagramDescriptionMappingsManager} recompute
+ * A listener to know {@link MappingsFromViewpointsComputationResult} recompute
  * mappings.
  * 
  * @author mchauvin
