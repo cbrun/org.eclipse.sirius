@@ -18,7 +18,6 @@ import java.util.List;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.sirius.diagram.business.api.componentization.DiagramComponentizationManager;
 import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManagerListener;
 import org.eclipse.sirius.diagram.business.api.helper.layers.LayerService;
 import org.eclipse.sirius.diagram.description.AbstractNodeMapping;
 import org.eclipse.sirius.diagram.description.ContainerMapping;
@@ -42,8 +41,6 @@ public class MappingsFromViewpointComputationResultImpl implements MappingsFromV
 
     private EList<EdgeMapping> edgeMappings;
 
-    private final List<DiagramDescriptionMappingsManagerListener> listeners;
-
     /**
      * Create a new instance.
      * 
@@ -52,7 +49,6 @@ public class MappingsFromViewpointComputationResultImpl implements MappingsFromV
      */
     public MappingsFromViewpointComputationResultImpl(final DiagramDescription description) {
         this.description = description;
-        this.listeners = new ArrayList<DiagramDescriptionMappingsManagerListener>(2);
     }
 
     /**
@@ -63,9 +59,6 @@ public class MappingsFromViewpointComputationResultImpl implements MappingsFromV
         edgeMappings = new DiagramComponentizationManager().getAllEdgeMappings(enabledViewpoints, this.description);
         containerMappings = new DiagramComponentizationManager().getAllContainerMappings(enabledViewpoints, this.description);
 
-        for (final DiagramDescriptionMappingsManagerListener listener : listeners) {
-            listener.mappingsComputed(enabledViewpoints);
-        }
     }
 
     /**
@@ -135,44 +128,12 @@ public class MappingsFromViewpointComputationResultImpl implements MappingsFromV
     }
 
     /**
-     * 
-     * {@inheritDoc}
-     * 
-     * @see org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult#addListener(org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManagerListener)
-     */
-    public void addListener(final DiagramDescriptionMappingsManagerListener listener) {
-        this.listeners.add(listener);
-    }
-
-    /**
-     * 
-     * {@inheritDoc}
-     * 
-     * @see org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult#removeListener(org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManagerListener)
-     */
-    public void removeListener(final DiagramDescriptionMappingsManagerListener listener) {
-        this.listeners.remove(listener);
-    }
-
-    /**
      * {@inheritDoc}
      * 
      * @see org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult#isLayerMode()
      */
     public boolean isLayerMode() {
         return !LayerService.withoutLayersMode(description);
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @see org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult#dispose()
-     */
-    public void dispose() {
-        for (final DiagramDescriptionMappingsManagerListener listener : listeners) {
-            listener.dispose();
-        }
-        listeners.clear();
     }
 
 }

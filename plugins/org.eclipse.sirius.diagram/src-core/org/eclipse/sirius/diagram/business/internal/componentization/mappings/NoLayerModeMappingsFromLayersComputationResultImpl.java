@@ -22,7 +22,6 @@ import org.eclipse.sirius.diagram.DNode;
 import org.eclipse.sirius.diagram.DNodeContainer;
 import org.eclipse.sirius.diagram.DNodeList;
 import org.eclipse.sirius.diagram.DragAndDropTarget;
-import org.eclipse.sirius.diagram.business.api.componentization.DiagramDescriptionMappingsManagerListener;
 import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationCache;
 import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromLayersComputationResult;
 import org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationResult;
@@ -47,7 +46,7 @@ import com.google.common.collect.Sets;
  * 
  * @author mchauvin
  */
-public final class NoLayerModeMappingsFromLayersComputationResultImpl implements MappingsFromLayersComputationResult, DiagramDescriptionMappingsManagerListener {
+public final class NoLayerModeMappingsFromLayersComputationResultImpl implements MappingsFromLayersComputationResult {
 
     private final MappingsFromViewpointsComputationResult descriptionMappings;
 
@@ -61,7 +60,6 @@ public final class NoLayerModeMappingsFromLayersComputationResultImpl implements
      */
     public NoLayerModeMappingsFromLayersComputationResultImpl(final MappingsFromViewpointsComputationResult descriptionMappings) {
         this.descriptionMappings = descriptionMappings;
-        this.descriptionMappings.addListener(this);
     }
 
     /**

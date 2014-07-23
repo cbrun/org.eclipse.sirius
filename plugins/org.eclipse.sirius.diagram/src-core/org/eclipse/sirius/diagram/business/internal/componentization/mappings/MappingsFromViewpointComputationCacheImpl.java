@@ -12,12 +12,9 @@ package org.eclipse.sirius.diagram.business.internal.componentization.mappings;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionListener;
@@ -113,47 +110,11 @@ public final class MappingsFromViewpointComputationCacheImpl implements Mappings
      * @see org.eclipse.sirius.diagram.business.api.componentization.MappingsFromViewpointsComputationCache#clearchCache()
      */
     public void clearchCache() {
-
-        cleanDiagramDescriptionNoMoreInResource();
-
-        for (final Entry<Key, MappingsFromViewpointsComputationResult> manager : diagramDescriptionMappingsManagers.entrySet()) {
-            if (manager.getKey().getSelectedViewpoints() != null) {
-                manager.getValue().computeMappings(manager.getKey().getSelectedViewpoints());
-            } else {
-                manager.getValue().computeMappings(null);
-            }
-        }
-    }
-
-    private void cleanDiagramDescriptionNoMoreInResource() {
-        final Set<Key> keysToRemove = new HashSet<Key>();
-        for (final Key key : diagramDescriptionMappingsManagers.keySet()) {
-            if (key.description == null || key.description.eResource() == null) {
-                keysToRemove.add(key);
-            }
-        }
-        for (final Key keyToRemove : keysToRemove) {
-            final MappingsFromViewpointsComputationResult manager = diagramDescriptionMappingsManagers.get(keyToRemove);
-            diagramDescriptionMappingsManagers.remove(keyToRemove);
-            manager.dispose();
-        }
+        diagramDescriptionMappingsManagers.clear();
     }
 
     private void cleanDiagramDescriptionMappingsManagers(final Session session) {
-        diagramDescriptionMappingsManagers.clear();
-//        final Set<Key> keysToRemove = new HashSet<Key>();
-//        for (final Key key : diagramDescriptionMappingsManagers.keySet()) {
-//            // TODO before commit : figure out how to cleanup
-//            // if (key.session == session) {
-//            // keysToRemove.add(key);
-//            // }
-//        }
-//        for (final Key keyToRemove : keysToRemove) {
-//            // diagramDescriptionMappingsManagers.remove(keyToRemove);
-//            final MappingsFromViewpointsComputationResult manager = diagramDescriptionMappingsManagers.get(keyToRemove);
-//            diagramDescriptionMappingsManagers.remove(keyToRemove);
-//            manager.dispose();
-//        }
+        clearchCache();
     }
 
     /**
