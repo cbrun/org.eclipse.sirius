@@ -116,7 +116,7 @@ public class DFeatureColumnCandidate {
             if (other.mapping != null) {
                 result = false;
             }
-        } else if (result == null && !mapping.getName().equals(other.mapping.getName())) {
+        } else if (result == null && !mapping.equals(other.mapping)) {
             result = false;
         }
         if (result == null && featureName == null) {
