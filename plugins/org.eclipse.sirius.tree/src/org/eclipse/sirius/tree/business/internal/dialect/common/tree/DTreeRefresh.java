@@ -18,6 +18,7 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.emf.common.util.ECollections;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.ECrossReferenceAdapter;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.sirius.ext.base.Option;
 import org.eclipse.sirius.ext.base.Options;
@@ -359,7 +360,6 @@ class TreeItemContainerChildSupport implements ChildCreationSupport {
     public TreeItemContainerChildSupport(GlobalContext ctx, DTreeItemContainer container) {
         this.container = container;
         this.ctx = ctx;
-
     }
 
     public void reorderChilds(Iterable<CreatedOutput> outDesc) {
@@ -408,7 +408,15 @@ class TreeItemContainerChildSupport implements ChildCreationSupport {
     }
 
     public void deleteChild(CreatedOutput outDesc) {
-        EcoreUtil.delete(outDesc.getCreatedElement());
+        /*
+         * The cross referencer is actually optional for the eDelete method of
+         * the model accessor.
+         */
+        ECrossReferenceAdapter xRef = null;
+        if (ctx.getSession().some()) {
+            xRef = ctx.getSession().get().getSemanticCrossReferencer();
+        }
+        ctx.getModelAccessor().eDelete(outDesc.getCreatedElement(), xRef);
     }
 
     public CreatedOutput createChild(OutputDescriptor outDesc) {
