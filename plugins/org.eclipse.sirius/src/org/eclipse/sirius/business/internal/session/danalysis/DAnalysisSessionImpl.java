@@ -143,7 +143,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-
 /**
  * A session which store data in {@link DAnalysis} references.
  * 
