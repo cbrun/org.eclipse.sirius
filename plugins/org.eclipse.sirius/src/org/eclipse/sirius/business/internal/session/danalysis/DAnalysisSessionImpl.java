@@ -25,9 +25,11 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.ListenerList;
@@ -49,9 +51,13 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.ecore.util.ECrossReferenceAdapter;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RunnableWithResult;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransaction;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
@@ -434,6 +440,8 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
             monitor.worked(1);
             updateSelectedViewpointsData(new SubProgressMonitor(monitor, 10));
             initLocalTriggers();
+
+            getTransactionalEditingDomain().addResourceSetListener(saver);
         } catch (OperationCanceledException e) {
             close(new SubProgressMonitor(monitor, 10));
             throw e;
@@ -835,40 +843,111 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
         save((Map<?, ?>) null, monitor);
     }
 
+    class Saver extends ResourceSetListenerImpl {
+
+        private AtomicBoolean saveOnPostCommit = new AtomicBoolean(false);
+
+        private IProgressMonitor monitor;
+
+        private Map<?, ?> options;
+
+        public void saveOnPostCommit(Map<?, ?> options, IProgressMonitor monitor) {
+            this.options = options;
+            this.monitor = monitor;
+            this.saveOnPostCommit.set(true);
+        }
+
+        @Override
+        public void resourceSetChanged(ResourceSetChangeEvent event) {
+            super.resourceSetChanged(event);
+            if (saveOnPostCommit.get()) {
+                doSave(this.options, this.monitor);
+            }
+        }
+
+        public void doSave(final Map<?, ?> options, final IProgressMonitor monitor) {
+            try {
+                monitor.beginTask("Session saving", 3);
+                final Collection<Resource> allResources = Lists.newArrayList();
+                allResources.addAll(getAllSessionResources());
+                Collection<Resource> semanticResourcesCollection = getSemanticResources();
+                allResources.addAll(semanticResourcesCollection);
+                allResources.addAll(getControlledResources());
+                monitor.worked(1);
+                RunnableWithResult<Collection<Resource>> save = new RunnableWithResult.Impl<Collection<Resource>>() {
+                    @Override
+                    public void run() {
+                        try {
+                            Collection<Resource> savedResources = getSavingPolicy().save(allResources, options, new SubProgressMonitor(monitor, 7));
+                            setResult(savedResources);
+                            setStatus(Status.OK_STATUS);
+                        } catch (Throwable e) {
+                            setStatus(new Status(IStatus.ERROR, SiriusPlugin.ID, "error while saving", e));
+                        }
+                    }
+                };
+                /*
+                 * launching the save itself in a read-only transaction will
+                 * block any other operation on the model which could come in
+                 * the meantime.
+                 */
+                getTransactionalEditingDomain().runExclusive(save);
+                if (!save.getStatus().isOK()) {
+                    SiriusPlugin.getDefault().error("save failed", new CoreException(save.getStatus()));
+                } else {
+                    Collection<Resource> savedResources = save.getResult();
+                    boolean semanticSave = false;
+                    for (final Resource resource : savedResources) {
+                        if (semanticResourcesCollection.contains(resource) || getControlledResources().contains(resource)) {
+                            semanticSave = true;
+                        }
+                    }
+                    if (semanticSave) {
+                        notifyListeners(SessionListener.SEMANTIC_CHANGE);
+                    }
+                    monitor.worked(1);
+                    CommandStack commandStack = transactionalEditingDomain.getCommandStack();
+                    if (commandStack instanceof BasicCommandStack) {
+                        ((BasicCommandStack) commandStack).saveIsDone();
+                    }
+                    if (allResourcesAreInSync()) {
+                        notifyListeners(SessionListener.SYNC);
+                    } else {
+                        notifyListeners(SessionListener.DIRTY);
+                    }
+                    monitor.worked(1);
+                }
+            } catch (InterruptedException e) {
+                SiriusPlugin.getDefault().error("save interrupted", e);
+            } finally {
+                monitor.done();
+                saveOnPostCommit.set(false);
+            }
+        }
+
+        @Override
+        public boolean isPostcommitOnly() {
+            return true;
+        }
+    }
+
+    private Saver saver = new Saver();
+
     @Override
     public void save(Map<?, ?> options, IProgressMonitor monitor) {
-        try {
-            monitor.beginTask("Session saving", 3);
-            Collection<Resource> allResources = Lists.newArrayList();
-            allResources.addAll(getAllSessionResources());
-            Collection<Resource> semanticResourcesCollection = getSemanticResources();
-            allResources.addAll(semanticResourcesCollection);
-            allResources.addAll(getControlledResources());
-            monitor.worked(1);
-            Collection<Resource> savedResources = getSavingPolicy().save(allResources, options, new SubProgressMonitor(monitor, 7));
-            boolean semanticSave = false;
-            for (final Resource resource : savedResources) {
-                if (semanticResourcesCollection.contains(resource) || super.getControlledResources().contains(resource)) {
-                    semanticSave = true;
-                }
-            }
-            if (semanticSave) {
-                notifyListeners(SessionListener.SEMANTIC_CHANGE);
-            }
-            monitor.worked(1);
-            CommandStack commandStack = transactionalEditingDomain.getCommandStack();
-            if (commandStack instanceof BasicCommandStack) {
-                ((BasicCommandStack) commandStack).saveIsDone();
-            }
-            if (allResourcesAreInSync()) {
-                notifyListeners(SessionListener.SYNC);
-            } else {
-                notifyListeners(SessionListener.DIRTY);
-            }
-            monitor.worked(1);
-        } finally {
-            monitor.done();
+        if (transactionInProgress()) {
+            saver.saveOnPostCommit(options, monitor);
+        } else {
+            saver.doSave(options, monitor);
         }
+    }
+
+    protected boolean transactionInProgress() {
+        if (getTransactionalEditingDomain() instanceof InternalTransactionalEditingDomain) {
+            InternalTransaction tx = ((InternalTransactionalEditingDomain) getTransactionalEditingDomain()).getActiveTransaction();
+            return tx != null;
+        }
+        return false;
     }
 
     @Override
@@ -1684,6 +1763,9 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
     public void close(IProgressMonitor monitor) {
         if (!isOpen()) {
             return;
+        }
+        if (saver != null && getTransactionalEditingDomain() != null) {
+            getTransactionalEditingDomain().removeResourceSetListener(saver);
         }
         if (Movida.isEnabled()) {
             org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry registry = (org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry) ViewpointRegistry.getInstance();
