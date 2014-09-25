@@ -27,6 +27,7 @@ import org.eclipse.sirius.business.api.helper.SiriusUtil;
 import org.eclipse.sirius.business.api.session.AbstractSavingPolicy;
 import org.eclipse.sirius.business.internal.session.danalysis.DifferentSerialization;
 import org.eclipse.sirius.business.internal.session.danalysis.UnderlyingFileExists;
+import org.eclipse.sirius.common.tools.api.resource.ResourceMigrationMarker;
 import org.eclipse.sirius.common.tools.api.resource.ResourceSetSync;
 import org.eclipse.sirius.common.tools.api.resource.ResourceSetSync.ResourceStatus;
 
@@ -79,7 +80,8 @@ public class IsModifiedSavingPolicy extends AbstractSavingPolicy {
              * that the Sirius runtime will set the isModified flag itself when
              * a change is done on the resource.
              */
-            return resource.isModified();
+
+            return resource.isModified() || ResourceMigrationMarker.hasMigrationMarker(resource);
         }
     };
 

@@ -491,6 +491,7 @@ public final class ResourceSetSync extends ResourceSetListenerImpl implements Re
     public void save(final Iterable<Resource> resourcesToSave, final Iterable<Resource> resourcesToUpdateStatus, final Map<?, ?> saveOptions) throws IOException, InterruptedException {
         Collection<ResourceStatusChange> changesToTransmit = Sets.newLinkedHashSet();
         doSave(resourcesToSave, saveOptions, changesToTransmit);
+
         for (Resource resource : resourcesToUpdateStatus) {
             ResourceStatus oldStatus = retrieveOldStatus(resource);
             if (oldStatus == ResourceStatus.UNKNOWN || oldStatus == ResourceStatus.CHANGED) {
@@ -540,7 +541,6 @@ public final class ResourceSetSync extends ResourceSetListenerImpl implements Re
                 savedResources.add(resource);
                 resource.save(saveOptions);
                 resource.setModified(false);
-
             } catch (final UnknownServiceException e) {
                 // if we're here we are probably trying to save model which
                 // can't be saved (for instance if it's in the plugins)

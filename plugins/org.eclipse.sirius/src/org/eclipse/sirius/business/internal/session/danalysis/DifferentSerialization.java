@@ -20,7 +20,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.URIConverter;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.sirius.business.api.helper.SiriusUtil;
+import org.eclipse.sirius.common.tools.api.resource.ResourceMigrationMarker;
 import org.eclipse.sirius.viewpoint.SiriusPlugin;
 
 import com.google.common.base.Predicate;
@@ -47,10 +47,6 @@ public class DifferentSerialization implements Predicate<Resource> {
      */
     public DifferentSerialization(final Map<?, ?> options) {
         this.options = options;
-    }
-
-    private boolean isSaveable(Resource resourcetoSave) {
-        return resourcetoSave.getURI().isFile() || resourcetoSave.getURI().isPlatformResource() && !SiriusUtil.isModelerDescriptionFile(resourcetoSave);
     }
 
     /**
@@ -114,6 +110,9 @@ public class DifferentSerialization implements Predicate<Resource> {
             resourcetoSave.eSetDeliver(true);
         }
         // CHECKSTYLE:ON
+        if (equal) {
+            ResourceMigrationMarker.clearMigrationMarker(resourcetoSave);
+        }
         return equal;
     }
 
@@ -121,7 +120,7 @@ public class DifferentSerialization implements Predicate<Resource> {
     public boolean apply(Resource input) {
         boolean hasChangesToSave = false;
         try {
-            hasChangesToSave = isSaveable(input) && !hasSameSerialization(input);
+            hasChangesToSave = !hasSameSerialization(input);
         } catch (final IOException e) {
             SiriusPlugin.getDefault().error("Error saving resource", e);
         }
