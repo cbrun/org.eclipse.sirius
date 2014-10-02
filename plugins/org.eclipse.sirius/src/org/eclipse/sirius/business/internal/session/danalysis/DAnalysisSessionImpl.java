@@ -143,6 +143,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+
 /**
  * A session which store data in {@link DAnalysis} references.
  * 
@@ -364,83 +365,88 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
         return resource.getURI() != null && rset.getPackageRegistry().getEPackage(resource.getURI().toString()) == null;
     }
 
+    private Object internalStateLock = new Object();
+
     @Override
     public void open(IProgressMonitor monitor) {
         try {
-            monitor.beginTask("Open session", 33);
-            if (!SessionManager.INSTANCE.getSessions().contains(this)) {
-                SessionManager.INSTANCE.add(this);
-            }
-            monitor.worked(1);
             notifyListeners(SessionListener.OPENING);
-            monitor.worked(1);
-            DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.OPEN_SESSION_KEY);
-            dAnalysisRefresher = new DAnalysisRefresher(this);
+            synchronized (internalStateLock) {
+                monitor.beginTask("Open session", 33);
+                if (!SessionManager.INSTANCE.getSessions().contains(this)) {
+                    SessionManager.INSTANCE.add(this);
+                }
+                monitor.worked(1);
+                monitor.worked(1);
+                DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.OPEN_SESSION_KEY);
+                dAnalysisRefresher = new DAnalysisRefresher(this);
 
-            ResourceSetSync.getOrInstallResourceSetSync(transactionalEditingDomain).registerClient(this);
-            monitor.worked(1);
-            transactionalEditingDomain.addResourceSetListener(representationNameListener);
-            monitor.worked(1);
+                ResourceSetSync.getOrInstallResourceSetSync(transactionalEditingDomain).registerClient(this);
+                monitor.worked(1);
+                transactionalEditingDomain.addResourceSetListener(representationNameListener);
+                monitor.worked(1);
 
-            final Collection<DAnalysis> allAnalyses = allAnalyses();
-            if (allAnalyses.isEmpty()) {
-                throw new RuntimeException("A analysis session could not be opened without at least a valid analyis");
+                final Collection<DAnalysis> allAnalyses = allAnalyses();
+                if (allAnalyses.isEmpty()) {
+                    throw new RuntimeException("A analysis session could not be opened without at least a valid analyis");
+                }
+                /*
+                 * Resolves all models needed by the session because GMF
+                 * installs a CrossReferencerAdapter that resolves the resource
+                 * set.
+                 */
+                DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.RESOLVE_ALL_KEY);
+                // First resolve all VSM resources used for Sirius to ignore VSM
+                // resources and VSM linked resources (as viewpoint:/environment
+                // resource) as new semantic element
+                dAnalysisRefresher.resolveAllVSMResources(allAnalyses);
+                // Then resolve all resources (to automatically add new semantic
+                // resources)
+                List<Resource> resourcesBeforeLoadOfSession = Lists.newArrayList(getTransactionalEditingDomain().getResourceSet().getResources());
+                dAnalysisRefresher.forceLoadingOfEveryLinkedResource();
+                monitor.worked(10);
+
+                // Add the unknown resources to the semantic resources of this
+                // session.
+                dAnalysisRefresher.addAutomaticallyLoadedResourcesToSemanticResources(resourcesBeforeLoadOfSession);
+                monitor.worked(1);
+                setSynchronizeStatusofEveryResource();
+                monitor.worked(1);
+
+                DslCommonPlugin.PROFILER.stopWork(SiriusTasksKey.RESOLVE_ALL_KEY);
+                // Look for controlled resources after load of every linked
+                // resources.
+                handlePossibleControlledResources();
+                monitor.worked(1);
+                dAnalysisRefresher.init();
+                monitor.worked(1);
+                if (!getSemanticResources().isEmpty()) {
+                    this.interpreter = new ODesignGenericInterpreter();
+                    initInterpreter();
+                }
+                monitor.worked(1);
+                initializeAccessor();
+                monitor.worked(1);
+                ResourceSetSync.getOrInstallResourceSetSync(transactionalEditingDomain);
+                monitor.worked(1);
+                DslCommonPlugin.PROFILER.stopWork(SiriusTasksKey.OPEN_SESSION_KEY);
+
+                if (Movida.isEnabled()) {
+                    org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry registry = (org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry) ViewpointRegistry
+                            .getInstance();
+                    registry.addListener((ViewpointRegistryListener) this);
+                } else {
+                    ViewpointRegistry.getInstance().addListener(this);
+                }
+                getEventBroker().addLocalTrigger(TrackingModificationTrigger.IS_CHANGE, new TrackingModificationTrigger(this.getTransactionalEditingDomain()));
+                super.setOpen(true);
+                monitor.worked(1);
+                updateSelectedViewpointsData(new SubProgressMonitor(monitor, 10));
+                initLocalTriggers();
+
+                getTransactionalEditingDomain().addResourceSetListener(saver);
             }
-            /*
-             * Resolves all models needed by the session because GMF installs a
-             * CrossReferencerAdapter that resolves the resource set.
-             */
-            DslCommonPlugin.PROFILER.startWork(SiriusTasksKey.RESOLVE_ALL_KEY);
-            // First resolve all VSM resources used for Sirius to ignore VSM
-            // resources and VSM linked resources (as viewpoint:/environment
-            // resource) as new semantic element
-            dAnalysisRefresher.resolveAllVSMResources(allAnalyses);
-            // Then resolve all resources (to automatically add new semantic
-            // resources)
-            List<Resource> resourcesBeforeLoadOfSession = Lists.newArrayList(getTransactionalEditingDomain().getResourceSet().getResources());
-            dAnalysisRefresher.forceLoadingOfEveryLinkedResource();
-            monitor.worked(10);
-
-            // Add the unknown resources to the semantic resources of this
-            // session.
-            dAnalysisRefresher.addAutomaticallyLoadedResourcesToSemanticResources(resourcesBeforeLoadOfSession);
-            monitor.worked(1);
-            setSynchronizeStatusofEveryResource();
-            monitor.worked(1);
-
-            DslCommonPlugin.PROFILER.stopWork(SiriusTasksKey.RESOLVE_ALL_KEY);
-            // Look for controlled resources after load of every linked
-            // resources.
-            handlePossibleControlledResources();
-            monitor.worked(1);
-            dAnalysisRefresher.init();
-            monitor.worked(1);
-            if (!getSemanticResources().isEmpty()) {
-                this.interpreter = new ODesignGenericInterpreter();
-                initInterpreter();
-            }
-            monitor.worked(1);
-            initializeAccessor();
-            monitor.worked(1);
-            ResourceSetSync.getOrInstallResourceSetSync(transactionalEditingDomain);
-            monitor.worked(1);
-            DslCommonPlugin.PROFILER.stopWork(SiriusTasksKey.OPEN_SESSION_KEY);
-
-            if (Movida.isEnabled()) {
-                org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry registry = (org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry) ViewpointRegistry
-                        .getInstance();
-                registry.addListener((ViewpointRegistryListener) this);
-            } else {
-                ViewpointRegistry.getInstance().addListener(this);
-            }
-            getEventBroker().addLocalTrigger(TrackingModificationTrigger.IS_CHANGE, new TrackingModificationTrigger(this.getTransactionalEditingDomain()));
-            super.setOpen(true);
             notifyListeners(SessionListener.OPENED);
-            monitor.worked(1);
-            updateSelectedViewpointsData(new SubProgressMonitor(monitor, 10));
-            initLocalTriggers();
-
-            getTransactionalEditingDomain().addResourceSetListener(saver);
         } catch (OperationCanceledException e) {
             close(new SubProgressMonitor(monitor, 10));
             throw e;
@@ -865,62 +871,65 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
         }
 
         public void doSave(final Map<?, ?> options, final IProgressMonitor monitor) {
-            try {
-                monitor.beginTask("Session saving", 3);
-                final Collection<Resource> allResources = Lists.newArrayList();
-                allResources.addAll(getAllSessionResources());
-                Collection<Resource> semanticResourcesCollection = getSemanticResources();
-                allResources.addAll(semanticResourcesCollection);
-                allResources.addAll(getControlledResources());
-                monitor.worked(1);
-                RunnableWithResult<Collection<Resource>> save = new RunnableWithResult.Impl<Collection<Resource>>() {
-                    @Override
-                    public void run() {
-                        try {
-                            Collection<Resource> savedResources = getSavingPolicy().save(allResources, options, new SubProgressMonitor(monitor, 7));
-                            setResult(savedResources);
-                            setStatus(Status.OK_STATUS);
-                        } catch (Throwable e) {
-                            setStatus(new Status(IStatus.ERROR, SiriusPlugin.ID, "error while saving", e));
-                        }
-                    }
-                };
-                /*
-                 * launching the save itself in a read-only transaction will
-                 * block any other operation on the model which could come in
-                 * the meantime.
-                 */
-                getTransactionalEditingDomain().runExclusive(save);
-                if (!save.getStatus().isOK()) {
-                    SiriusPlugin.getDefault().error("save failed", new CoreException(save.getStatus()));
-                } else {
-                    Collection<Resource> savedResources = save.getResult();
-                    boolean semanticSave = false;
-                    for (final Resource resource : savedResources) {
-                        if (semanticResourcesCollection.contains(resource) || getControlledResources().contains(resource)) {
-                            semanticSave = true;
-                        }
-                    }
-                    if (semanticSave) {
-                        notifyListeners(SessionListener.SEMANTIC_CHANGE);
-                    }
+            synchronized (internalStateLock) {
+
+                try {
+                    monitor.beginTask("Session saving", 3);
+                    final Collection<Resource> allResources = Lists.newArrayList();
+                    allResources.addAll(getAllSessionResources());
+                    Collection<Resource> semanticResourcesCollection = getSemanticResources();
+                    allResources.addAll(semanticResourcesCollection);
+                    allResources.addAll(getControlledResources());
                     monitor.worked(1);
-                    CommandStack commandStack = transactionalEditingDomain.getCommandStack();
-                    if (commandStack instanceof BasicCommandStack) {
-                        ((BasicCommandStack) commandStack).saveIsDone();
-                    }
-                    if (allResourcesAreInSync()) {
-                        notifyListeners(SessionListener.SYNC);
+                    RunnableWithResult<Collection<Resource>> save = new RunnableWithResult.Impl<Collection<Resource>>() {
+                        @Override
+                        public void run() {
+                            try {
+                                Collection<Resource> savedResources = getSavingPolicy().save(allResources, options, new SubProgressMonitor(monitor, 7));
+                                setResult(savedResources);
+                                setStatus(Status.OK_STATUS);
+                            } catch (Throwable e) {
+                                setStatus(new Status(IStatus.ERROR, SiriusPlugin.ID, "error while saving", e));
+                            }
+                        }
+                    };
+                    /*
+                     * launching the save itself in a read-only transaction will
+                     * block any other operation on the model which could come
+                     * in the meantime.
+                     */
+                    getTransactionalEditingDomain().runExclusive(save);
+                    if (!save.getStatus().isOK()) {
+                        SiriusPlugin.getDefault().error("save failed", new CoreException(save.getStatus()));
                     } else {
-                        notifyListeners(SessionListener.DIRTY);
+                        Collection<Resource> savedResources = save.getResult();
+                        boolean semanticSave = false;
+                        for (final Resource resource : savedResources) {
+                            if (semanticResourcesCollection.contains(resource) || getControlledResources().contains(resource)) {
+                                semanticSave = true;
+                            }
+                        }
+                        if (semanticSave) {
+                            notifyListeners(SessionListener.SEMANTIC_CHANGE);
+                        }
+                        monitor.worked(1);
+                        CommandStack commandStack = transactionalEditingDomain.getCommandStack();
+                        if (commandStack instanceof BasicCommandStack) {
+                            ((BasicCommandStack) commandStack).saveIsDone();
+                        }
+                        if (allResourcesAreInSync()) {
+                            notifyListeners(SessionListener.SYNC);
+                        } else {
+                            notifyListeners(SessionListener.DIRTY);
+                        }
+                        monitor.worked(1);
                     }
-                    monitor.worked(1);
+                } catch (InterruptedException e) {
+                    SiriusPlugin.getDefault().error("save interrupted", e);
+                } finally {
+                    monitor.done();
+                    saveOnPostCommit.set(false);
                 }
-            } catch (InterruptedException e) {
-                SiriusPlugin.getDefault().error("save interrupted", e);
-            } finally {
-                monitor.done();
-                saveOnPostCommit.set(false);
             }
         }
 
@@ -1444,6 +1453,8 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
 
     @Override
     public void statusesChanged(Collection<ResourceStatusChange> changes) {
+        List<Integer> notifsToSend = Lists.newArrayList();
+
         if (isOpen()) {
             Multimap<ResourceStatus, Resource> newStatuses = getImpactingNewStatuses(changes);
             boolean allResourcesSync = allResourcesAreInSync();
@@ -1451,11 +1462,11 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
                 switch (newStatus) {
                 case SYNC:
                     if (allResourcesSync) {
-                        notifyListeners(SessionListener.SYNC);
+                        notifsToSend.add(SessionListener.SYNC);
                     }
                     break;
                 case CHANGED:
-                    notifyListeners(SessionListener.DIRTY);
+                    notifsToSend.add(SessionListener.DIRTY);
                     break;
                 case EXTERNAL_CHANGED:
                 case CONFLICTING_CHANGED:
@@ -1471,10 +1482,10 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
                              * make sense
                              */
                             if (isInProjectDeletedRenamedOrClosed(resource)) {
-                                processAction(Action.CLOSE_SESSION, resource, pm);
+                                processActions(Lists.newArrayList(Action.CLOSE_SESSION), resource, notifsToSend, pm);
                                 return;
                             }
-                            processActions(getReloadingPolicy().getActions(this, resource, newStatus), resource, pm);
+                            processActions(getReloadingPolicy().getActions(this, resource, newStatus), resource, notifsToSend, pm);
 
                             // CHECKSTYLE:OFF
                         } catch (final Exception e) {
@@ -1486,9 +1497,9 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
                     // Reload were launched, get global status.
                     allResourcesSync = allResourcesAreInSync();
                     if (allResourcesSync) {
-                        notifyListeners(SessionListener.SYNC);
+                        notifsToSend.add(SessionListener.SYNC);
                     } else {
-                        notifyListeners(SessionListener.DIRTY);
+                        notifsToSend.add(SessionListener.DIRTY);
                     }
                     break;
                 default:
@@ -1501,6 +1512,9 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
             } else {
                 super.setSynchronizationStatus(SyncStatus.DIRTY);
             }
+        }
+        for (Integer resourceStatusCode : notifsToSend) {
+            notifyListeners(resourceStatusCode.intValue());
         }
     }
 
@@ -1554,27 +1568,25 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
         return false;
     }
 
-    private void processActions(final List<Action> actions, final Resource resource, IProgressMonitor pm) throws Exception {
-        for (final Action action : actions) {
-            processAction(action, resource, pm);
-        }
-    }
-
-    private void processAction(final Action action, final Resource resource, IProgressMonitor pm) throws Exception {
-        switch (action) {
-        case CLOSE_SESSION:
-            close(pm);
-            break;
-        case RELOAD:
-            if (isOpen()) {
-                reloadResource(resource);
+    private void processActions(final List<Action> actions, final Resource resource, List<Integer> notifsToSend, IProgressMonitor pm) throws Exception {
+        synchronized (internalStateLock) {
+            for (final Action action : actions) {
+                switch (action) {
+                case CLOSE_SESSION:
+                    close(pm);
+                    break;
+                case RELOAD:
+                    if (isOpen()) {
+                        reloadResource(resource);
+                    }
+                    break;
+                case REMOVE:
+                    removeResourceFromSession(resource, pm);
+                    break;
+                default:
+                    break;
+                }
             }
-            break;
-        case REMOVE:
-            removeResourceFromSession(resource, pm);
-            break;
-        default:
-            break;
         }
     }
 
@@ -1763,77 +1775,81 @@ public class DAnalysisSessionImpl extends DAnalysisSessionEObjectImpl implements
         if (!isOpen()) {
             return;
         }
-        if (saver != null && getTransactionalEditingDomain() != null) {
-            getTransactionalEditingDomain().removeResourceSetListener(saver);
-        }
-        if (Movida.isEnabled()) {
-            org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry registry = (org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry) ViewpointRegistry.getInstance();
-            registry.removeListener((ViewpointRegistryListener) this);
-        } else {
-            ViewpointRegistry.getInstance().removeListener(this);
-        }
         notifyListeners(SessionListener.CLOSING);
-        disableAndRemoveECrossReferenceAdapters();
-
-        if (controlledResourcesDetector != null) {
-            controlledResourcesDetector.dispose();
-        }
-        if (dAnalysisRefresher != null) {
-            dAnalysisRefresher.dispose();
-            dAnalysisRefresher = null;
-        }
-
-        if (interpreter != null) {
-            interpreter.dispose();
-        }
-        ResourceSetSync.getOrInstallResourceSetSync(transactionalEditingDomain).unregisterClient(this);
-        ResourceSetSync.uninstallResourceSetSync(transactionalEditingDomain);
-        super.setOpen(false);
         /*
-         * Let's clear the cross referencer of the VSM resource if it's still
-         * there (added by the updateSelectedViewpointsData).
+         * Let's clear the cross referencer of the VSM resource if it's
+         * still there (added by the updateSelectedViewpointsData).
          */
         ResourceSet resourceSet = getTransactionalEditingDomain().getResourceSet();
+        synchronized (internalStateLock) {
 
-        if (currentResourceCollector != null) {
-            currentResourceCollector.dispose();
-            currentResourceCollector = null;
-        }
-        interpreter = null;
-        crossReferencer = null;
-        transactionalEditingDomain.removeResourceSetListener(representationNameListener);
-        // dispose the SessionEventBroker
-        if (broker != null) {
-            broker.dispose();
-            broker = null;
-        }
-        flushOperations();
-        // Unload all referenced resources
-        unloadResource();
-        if (disposeEditingDomainOnClose) {
-            // To remove remaining resource like environment:/viewpoint
-            for (Resource resource : new ArrayList<Resource>(resourceSet.getResources())) {
-                resource.unload();
-                resourceSet.getResources().remove(resource);
+            if (saver != null && getTransactionalEditingDomain() != null) {
+                getTransactionalEditingDomain().removeResourceSetListener(saver);
+            }
+            if (Movida.isEnabled()) {
+                org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry registry = (org.eclipse.sirius.business.internal.movida.registry.ViewpointRegistry) ViewpointRegistry
+                        .getInstance();
+                registry.removeListener((ViewpointRegistryListener) this);
+            } else {
+                ViewpointRegistry.getInstance().removeListener(this);
+            }
+            disableAndRemoveECrossReferenceAdapters();
+
+            if (controlledResourcesDetector != null) {
+                controlledResourcesDetector.dispose();
+            }
+            if (dAnalysisRefresher != null) {
+                dAnalysisRefresher.dispose();
+                dAnalysisRefresher = null;
+            }
+
+            if (interpreter != null) {
+                interpreter.dispose();
+            }
+            ResourceSetSync.getOrInstallResourceSetSync(transactionalEditingDomain).unregisterClient(this);
+            ResourceSetSync.uninstallResourceSetSync(transactionalEditingDomain);
+            super.setOpen(false);
+
+            if (currentResourceCollector != null) {
+                currentResourceCollector.dispose();
+                currentResourceCollector = null;
+            }
+            interpreter = null;
+            crossReferencer = null;
+            transactionalEditingDomain.removeResourceSetListener(representationNameListener);
+            // dispose the SessionEventBroker
+            if (broker != null) {
+                broker.dispose();
+                broker = null;
+            }
+            flushOperations();
+            // Unload all referenced resources
+            unloadResource();
+            if (disposeEditingDomainOnClose) {
+                // To remove remaining resource like environment:/viewpoint
+                for (Resource resource : new ArrayList<Resource>(resourceSet.getResources())) {
+                    resource.unload();
+                    resourceSet.getResources().remove(resource);
+                }
             }
         }
-        // Notify that the session is closed.
-        notifyListeners(SessionListener.CLOSED);
-        SessionManager.INSTANCE.remove(this);
-        if (semanticResourcesUpdater != null) {
-            semanticResourcesUpdater.dispose();
-            semanticResourcesUpdater = null;
-        }
-        if (semanticResources != null) {
-            semanticResources.clear();
-        }
-        reenableECrossReferenceAdaptersBeforeEndOfClosing();
+            notifyListeners(SessionListener.CLOSED);
+            // Notify that the session is closed.
+            SessionManager.INSTANCE.remove(this);
+            if (semanticResourcesUpdater != null) {
+                semanticResourcesUpdater.dispose();
+                semanticResourcesUpdater = null;
+            }
+            if (semanticResources != null) {
+                semanticResources.clear();
+            }
+            reenableECrossReferenceAdaptersBeforeEndOfClosing();
 
-        if (disposeEditingDomainOnClose) {
-            transactionalEditingDomain.dispose();
-            doDisposePermissionAuthority(resourceSet);
-        }
-        mainDAnalysis = null;
+            if (disposeEditingDomainOnClose) {
+                transactionalEditingDomain.dispose();
+                doDisposePermissionAuthority(resourceSet);
+            }
+            mainDAnalysis = null;
     }
 
     private void disableAndRemoveECrossReferenceAdapters() {
